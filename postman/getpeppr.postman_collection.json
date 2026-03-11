@@ -1,0 +1,295 @@
+{
+  "info": {
+    "name": "getpeppr API",
+    "description": "Peppol e-invoicing API. Full docs at https://getpeppr.dev/docs/",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.getpeppr.dev",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "sk_sandbox_abc123...",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Invoices",
+      "item": [
+        {
+          "name": "Send Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/send",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", "send"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"from\": {\n    \"name\": \"Acme BVBA\",\n    \"peppolId\": \"0208:BE0456789012\",\n    \"country\": \"BE\"\n  },\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Import Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/import",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", "import"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ublXml\": \"<Invoice xmlns='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'>...</Invoice>\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Invoices",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/invoices?limit=10&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices"],
+              "query": [
+                { "key": "limit", "value": "10" },
+                { "key": "offset", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Invoice Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/:id/status",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", ":id", "status"],
+              "variable": [
+                { "key": "id", "value": "inv_abc123" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contacts",
+      "item": [
+        {
+          "name": "List Contacts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/contacts",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "contacts"]
+            }
+          }
+        },
+        {
+          "name": "Get Contact",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/contacts/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "contacts", ":id"],
+              "variable": [
+                { "key": "id", "value": "ct_abc123" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Contact",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/contacts",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "contacts"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Globex NV\",\n  \"peppolId\": \"0208:BE0987654321\",\n  \"country\": \"BE\",\n  \"email\": \"billing@globex.be\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bank Accounts",
+      "item": [
+        {
+          "name": "List Bank Accounts",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/bank-accounts",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "bank-accounts"]
+            }
+          }
+        },
+        {
+          "name": "Get Bank Account",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/bank-accounts/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "bank-accounts", ":id"],
+              "variable": [
+                { "key": "id", "value": "ba_abc123" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Bank Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/bank-accounts",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "bank-accounts"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"iban\": \"BE68539007547034\",\n  \"bic\": \"BPOTBEB1\",\n  \"name\": \"Main Business Account\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Directory",
+      "item": [
+        {
+          "name": "Lookup Participant",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/directory/:scheme/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "directory", ":scheme", ":id"],
+              "variable": [
+                { "key": "scheme", "value": "0208" },
+                { "key": "id", "value": "BE0456789012" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Validation",
+      "item": [
+        {
+          "name": "Validate Invoice (Client)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/validate",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "validate"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"from\": {\n    \"name\": \"Acme BVBA\",\n    \"peppolId\": \"0208:BE0456789012\",\n    \"country\": \"BE\"\n  },\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Validate Invoice (Server)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/validate/server",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "validate", "server"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"from\": {\n    \"name\": \"Acme BVBA\",\n    \"peppolId\": \"0208:BE0456789012\",\n    \"country\": \"BE\"\n  },\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "item": [
+        {
+          "name": "List Events",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/events?limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "events"],
+              "query": [
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

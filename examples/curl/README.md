@@ -2,7 +2,9 @@
 
 Replace `sk_sandbox_abc123...` with your actual API key.
 
-## Send an invoice
+## Invoices
+
+### Send an invoice
 
 ```bash
 curl -X POST https://api.getpeppr.dev/v1/invoices/send \
@@ -29,7 +31,100 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
   }'
 ```
 
-## Validate an invoice
+### Create a draft invoice
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/invoices \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "number": "INV-2026-002",
+    "from": {
+      "name": "Acme BVBA",
+      "peppolId": "0208:BE0456789012",
+      "country": "BE"
+    },
+    "to": {
+      "name": "Globex NV",
+      "peppolId": "0208:BE0987654321",
+      "country": "BE"
+    },
+    "lines": [{
+      "description": "Consulting",
+      "quantity": 1,
+      "unitPrice": 1000,
+      "vatRate": 21
+    }]
+  }'
+```
+
+### Send a draft by ID
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/invoices/inv_abc123/send \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Update a draft invoice
+
+```bash
+curl -X PATCH https://api.getpeppr.dev/v1/invoices/inv_abc123 \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "note": "Updated payment terms",
+    "dueDate": "2026-04-15"
+  }'
+```
+
+### Delete an invoice
+
+```bash
+curl -X DELETE https://api.getpeppr.dev/v1/invoices/inv_abc123 \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### List invoices
+
+```bash
+curl https://api.getpeppr.dev/v1/invoices?limit=10&offset=0 \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Check invoice status
+
+```bash
+curl https://api.getpeppr.dev/v1/invoices/inv_abc123/status \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Export invoice as PDF
+
+```bash
+curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/pdf \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -o invoice.pdf
+```
+
+### Acknowledge a received invoice
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/invoices/inv_abc123/ack \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Mark invoice as accepted/rejected/paid
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/invoices/inv_abc123/mark-as \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{"state": "paid"}'
+```
+
+## Validation
+
+### Validate an invoice
 
 ```bash
 curl -X POST https://api.getpeppr.dev/v1/validate \
@@ -56,35 +151,16 @@ curl -X POST https://api.getpeppr.dev/v1/validate \
   }'
 ```
 
-## List invoices
+## Contacts
 
-```bash
-curl https://api.getpeppr.dev/v1/invoices?limit=10&offset=0 \
-  -H "Authorization: Bearer sk_sandbox_abc123..."
-```
-
-## Check invoice status
-
-```bash
-curl https://api.getpeppr.dev/v1/invoices/inv_abc123/status \
-  -H "Authorization: Bearer sk_sandbox_abc123..."
-```
-
-## Lookup a Peppol participant
-
-```bash
-curl https://api.getpeppr.dev/v1/directory/0208/BE0456789012 \
-  -H "Authorization: Bearer sk_sandbox_abc123..."
-```
-
-## List contacts
+### List contacts
 
 ```bash
 curl https://api.getpeppr.dev/v1/contacts \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
-## Create a contact
+### Create a contact
 
 ```bash
 curl -X POST https://api.getpeppr.dev/v1/contacts \
@@ -96,4 +172,131 @@ curl -X POST https://api.getpeppr.dev/v1/contacts \
     "country": "BE",
     "email": "billing@globex.be"
   }'
+```
+
+### Update a contact
+
+```bash
+curl -X PUT https://api.getpeppr.dev/v1/contacts/ct_abc123 \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "invoicing@globex.be",
+    "street": "Rue du Commerce 42"
+  }'
+```
+
+### Delete a contact
+
+```bash
+curl -X DELETE https://api.getpeppr.dev/v1/contacts/ct_abc123 \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+## Bank Accounts
+
+### List bank accounts
+
+```bash
+curl https://api.getpeppr.dev/v1/bank-accounts \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Create a bank account
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/bank-accounts \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "iban": "BE68539007547034",
+    "bic": "BPOTBEB1",
+    "name": "Main Business Account"
+  }'
+```
+
+### Update a bank account
+
+```bash
+curl -X PUT https://api.getpeppr.dev/v1/bank-accounts/ba_abc123 \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Primary EUR Account"
+  }'
+```
+
+### Delete a bank account
+
+```bash
+curl -X DELETE https://api.getpeppr.dev/v1/bank-accounts/ba_abc123 \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+## Transports
+
+### List transport types
+
+```bash
+curl https://api.getpeppr.dev/v1/transports/types \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### List configured transports
+
+```bash
+curl https://api.getpeppr.dev/v1/transports \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Get a transport
+
+```bash
+curl https://api.getpeppr.dev/v1/transports/peppol_as4 \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Create a transport
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/transports \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "email",
+    "name": "Email Transport",
+    "config": {
+      "to": "invoices@example.com"
+    }
+  }'
+```
+
+### Update a transport
+
+```bash
+curl -X PATCH https://api.getpeppr.dev/v1/transports/email \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Email Transport",
+    "config": {
+      "to": "billing@example.com"
+    }
+  }'
+```
+
+### Delete a transport
+
+```bash
+curl -X DELETE https://api.getpeppr.dev/v1/transports/email \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+## Directory
+
+### Lookup a Peppol participant
+
+```bash
+curl https://api.getpeppr.dev/v1/directory/0208/BE0456789012 \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
 ```

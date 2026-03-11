@@ -31,6 +31,27 @@
       "name": "Invoices",
       "item": [
         {
+          "name": "Create Draft Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/invoices",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"from\": {\n    \"name\": \"Acme BVBA\",\n    \"peppolId\": \"0208:BE0456789012\",\n    \"country\": \"BE\"\n  },\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
           "name": "Send Invoice",
           "request": {
             "method": "POST",
@@ -48,6 +69,58 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"from\": {\n    \"name\": \"Acme BVBA\",\n    \"peppolId\": \"0208:BE0456789012\",\n    \"country\": \"BE\"\n  },\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "Send Draft by ID",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/:id/send",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", ":id", "send"],
+              "variable": [
+                { "key": "id", "value": "inv_abc123" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Invoice",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", ":id"],
+              "variable": [
+                { "key": "id", "value": "inv_abc123" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Updated payment terms\",\n  \"dueDate\": \"2026-04-15\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Invoice",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", ":id"],
+              "variable": [
+                { "key": "id", "value": "inv_abc123" }
+              ]
             }
           }
         },
@@ -98,6 +171,59 @@
               "variable": [
                 { "key": "id", "value": "inv_abc123" }
               ]
+            }
+          }
+        },
+        {
+          "name": "Export Invoice (PDF/XML/JSON)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/:id/as/:format",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", ":id", "as", ":format"],
+              "variable": [
+                { "key": "id", "value": "inv_abc123" },
+                { "key": "format", "value": "pdf" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Acknowledge Invoice",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/:id/ack",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", ":id", "ack"],
+              "variable": [
+                { "key": "id", "value": "inv_abc123" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark Invoice As (accepted/rejected/paid)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/:id/mark-as",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", ":id", "mark-as"],
+              "variable": [
+                { "key": "id", "value": "inv_abc123" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"state\": \"paid\"\n}"
             }
           }
         }
@@ -151,6 +277,44 @@
               "raw": "{\n  \"name\": \"Globex NV\",\n  \"peppolId\": \"0208:BE0987654321\",\n  \"country\": \"BE\",\n  \"email\": \"billing@globex.be\"\n}"
             }
           }
+        },
+        {
+          "name": "Update Contact",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/contacts/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "contacts", ":id"],
+              "variable": [
+                { "key": "id", "value": "ct_abc123" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"invoicing@globex.be\",\n  \"street\": \"Rue du Commerce 42\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Contact",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/v1/contacts/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "contacts", ":id"],
+              "variable": [
+                { "key": "id", "value": "ct_abc123" }
+              ]
+            }
+          }
         }
       ]
     },
@@ -200,6 +364,144 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"iban\": \"BE68539007547034\",\n  \"bic\": \"BPOTBEB1\",\n  \"name\": \"Main Business Account\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Bank Account",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/bank-accounts/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "bank-accounts", ":id"],
+              "variable": [
+                { "key": "id", "value": "ba_abc123" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Primary EUR Account\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Bank Account",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/v1/bank-accounts/:id",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "bank-accounts", ":id"],
+              "variable": [
+                { "key": "id", "value": "ba_abc123" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transports",
+      "item": [
+        {
+          "name": "List Transport Types",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/transports/types",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "transports", "types"]
+            }
+          }
+        },
+        {
+          "name": "List Transports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/transports",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "transports"]
+            }
+          }
+        },
+        {
+          "name": "Get Transport",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/transports/:code",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "transports", ":code"],
+              "variable": [
+                { "key": "code", "value": "peppol_as4" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Transport",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/transports",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "transports"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"email\",\n  \"name\": \"Email Transport\",\n  \"config\": {\n    \"to\": \"invoices@example.com\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Transport",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/transports/:code",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "transports", ":code"],
+              "variable": [
+                { "key": "code", "value": "email" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Email Transport\",\n  \"config\": {\n    \"to\": \"billing@example.com\"\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Transport",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/v1/transports/:code",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "transports", ":code"],
+              "variable": [
+                { "key": "code", "value": "email" }
+              ]
             }
           }
         }

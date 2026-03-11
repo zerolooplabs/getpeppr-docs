@@ -21,7 +21,7 @@ npm install @getpeppr/sdk
 ```typescript
 import { Peppol } from "@getpeppr/sdk";
 
-const peppol = new Peppol({ apiKey: "pk_test_..." });
+const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
 const invoice = await peppol.invoices.send({
   number: "INV-2026-001",
@@ -98,50 +98,149 @@ Import the collection into Postman for interactive API exploration.
 
 ## API Overview
 
-### Invoices
+### Invoice Lifecycle
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/v1/invoices/send` | Send an invoice |
-| `POST` | `/v1/invoices/import` | Import an existing invoice |
-| `GET` | `/v1/invoices` | List invoices |
-| `GET` | `/v1/invoices/:id` | Get invoice details |
-| `GET` | `/v1/invoices/:id/status` | Check delivery status |
+Create a draft, review it, send it, then track delivery:
+
+```
+create (draft) → update → send → track status → acknowledge
+                                               → export (PDF, XML, JSON)
+                                               → mark as (accepted, rejected, paid)
+```
+
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `POST` | `/v1/invoices` | `invoices.create()` | Create a draft invoice |
+| `PATCH` | `/v1/invoices/:id` | `invoices.update()` | Update a draft invoice |
+| `DELETE` | `/v1/invoices/:id` | `invoices.delete()` | Delete an invoice |
+| `POST` | `/v1/invoices/send` | `invoices.send()` | Validate, create, and send in one step |
+| `POST` | `/v1/invoices/:id/send` | `invoices.sendById()` | Send an existing draft |
+| `GET` | `/v1/invoices` | `invoices.list()` | List invoices (paginated) |
+| `GET` | `/v1/invoices/:id/status` | `invoices.getStatus()` | Check delivery status |
+| `GET` | `/v1/invoices/:id/as/:format` | `invoices.getAs()` | Export as PDF, XML, or JSON |
+| `POST` | `/v1/invoices/:id/ack` | `invoices.acknowledge()` | Acknowledge a received invoice |
+| `POST` | `/v1/invoices/:id/mark-as` | `invoices.markAs()` | Transition state (accepted, rejected, paid) |
+| `POST` | `/v1/invoices/import` | `invoices.importFile()` | Import from XML/PDF |
+
+Status flow:
+
+```
+"created" → "queued" → "sent" → "delivered" → "accepted"
+                                             → "rejected"
+                                → "failed"
+```
 
 ### Credit Notes
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/v1/invoices/send` | Send a credit note (type: `creditNote`) |
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `POST` | `/v1/invoices/send` | `creditNotes.send()` | Send a credit note (must reference an invoice) |
 
 ### Contacts
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/v1/contacts` | List contacts |
-| `GET` | `/v1/contacts/:id` | Get contact details |
-| `POST` | `/v1/contacts` | Create a contact |
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `GET` | `/v1/contacts` | `contacts.list()` | List contacts (paginated) |
+| `GET` | `/v1/contacts/:id` | `contacts.get()` | Get contact details |
+| `POST` | `/v1/contacts` | `contacts.create()` | Create a contact |
+| `PUT` | `/v1/contacts/:id` | `contacts.update()` | Update a contact |
+| `DELETE` | `/v1/contacts/:id` | `contacts.delete()` | Delete a contact |
 
 ### Bank Accounts
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/v1/bank-accounts` | List bank accounts |
-| `GET` | `/v1/bank-accounts/:id` | Get bank account details |
-| `POST` | `/v1/bank-accounts` | Create a bank account |
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `GET` | `/v1/bank-accounts` | `bankAccounts.list()` | List bank accounts (paginated) |
+| `GET` | `/v1/bank-accounts/:id` | `bankAccounts.get()` | Get bank account details |
+| `POST` | `/v1/bank-accounts` | `bankAccounts.create()` | Create a bank account |
+| `PUT` | `/v1/bank-accounts/:id` | `bankAccounts.update()` | Update a bank account |
+| `DELETE` | `/v1/bank-accounts/:id` | `bankAccounts.delete()` | Delete a bank account |
+
+### Transports
+
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `GET` | `/v1/transports/types` | `transports.listTypes()` | List available transport types |
+| `GET` | `/v1/transports` | `transports.list()` | List configured transports |
+| `GET` | `/v1/transports/:code` | `transports.get()` | Get transport details |
+| `POST` | `/v1/transports` | `transports.create()` | Create a transport |
+| `PATCH` | `/v1/transports/:code` | `transports.update()` | Update a transport |
+| `DELETE` | `/v1/transports/:code` | `transports.delete()` | Delete a transport |
 
 ### Directory
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/v1/directory/:scheme/:id` | Lookup Peppol participant |
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `GET` | `/v1/directory/:scheme/:id` | `directory.lookup()` | Lookup Peppol participant |
 
 ### Validation
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/v1/validate` | Validate invoice (client-side rules) |
-| `POST` | `/v1/validate/server` | Validate invoice (server-side, full) |
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `POST` | `/v1/validate` | `peppol.validate()` | Validate invoice (client-side rules) |
+| `POST` | `/v1/validate/server` | `invoices.validateServer()` | Validate invoice (server-side, full XSD + Schematron) |
+
+### Events
+
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `GET` | `/v1/events` | `events.list()` | List usage events (paginated) |
+
+### Webhooks
+
+Verify incoming webhook signatures using HMAC-SHA256:
+
+```typescript
+import { webhooks } from "@getpeppr/sdk";
+
+const event = await webhooks.constructEvent(
+  rawBody,                    // raw request body string
+  req.headers["x-b2brouter-signature"],
+  process.env.WEBHOOK_SECRET
+);
+
+console.log(event.type); // e.g. "invoice.delivered"
+```
+
+---
+
+## Advanced Features
+
+### Pagination Iterator
+
+Automatically paginate through all results:
+
+```typescript
+for await (const invoice of peppol.invoices.listAll()) {
+  console.log(invoice.number);
+}
+```
+
+Also available on `contacts.listAll()`, `bankAccounts.listAll()`, and `events.listAll()`.
+
+### Batch Send
+
+Send multiple invoices concurrently:
+
+```typescript
+const result = await peppol.invoices.sendBatch(invoices, {
+  concurrency: 5,
+  stopOnError: false,
+});
+
+console.log(`${result.succeeded.length} sent, ${result.failed.length} failed`);
+```
+
+### Status Polling
+
+Wait for an invoice to reach a target status:
+
+```typescript
+const final = await peppol.invoices.waitFor(invoice.id, "accepted", {
+  interval: 2000,   // poll every 2s
+  timeout: 60_000,  // give up after 60s
+});
+```
 
 ---
 

@@ -1,6 +1,6 @@
 import { Peppol } from "@getpeppr/sdk";
 
-const peppol = new Peppol({ apiKey: "pk_live_..." });
+const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
 // List received invoices from your Peppol inbox
 const received = await peppol.invoices.listReceived({

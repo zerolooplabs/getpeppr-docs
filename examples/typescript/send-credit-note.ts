@@ -1,6 +1,6 @@
 import { Peppol } from "@getpeppr/sdk";
 
-const peppol = new Peppol({ apiKey: "pk_live_..." });
+const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
 // A credit note MUST reference the original invoice
 const creditNote = await peppol.creditNotes.send({

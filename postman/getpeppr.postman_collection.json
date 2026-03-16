@@ -73,6 +73,27 @@
           }
         },
         {
+          "name": "Send Credit Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/v1/invoices/send",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "invoices", "send"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"CN-2026-001\",\n  \"isCreditNote\": true,\n  \"invoiceReference\": \"INV-2026-001\",\n  \"from\": {\n    \"name\": \"Acme BVBA\",\n    \"peppolId\": \"0208:BE0456789012\",\n    \"country\": \"BE\"\n  },\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting — refund\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+            }
+          }
+        },
+        {
           "name": "Send Draft by ID",
           "request": {
             "method": "POST",

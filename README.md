@@ -68,10 +68,16 @@ Full documentation is available at **[getpeppr.dev/docs](https://getpeppr.dev/do
 
 | Guide | Description |
 |-------|-------------|
-| [Getting Started](https://getpeppr.dev/docs/) | Installation, first invoice, configuration |
-| [Authentication](https://getpeppr.dev/docs/authentication/) | API keys, environments, security |
-| [Invoices](https://getpeppr.dev/docs/invoices/) | Send, receive, credit notes, attachments |
-| [Error Handling](https://getpeppr.dev/docs/error-handling/) | Validation errors, API errors, retries |
+| [Quick Start](https://getpeppr.dev/docs/) | Installation, first invoice, configuration |
+| [Authentication](https://getpeppr.dev/docs/authentication/) | API keys, environments, rate limits |
+| [Send an Invoice](https://getpeppr.dev/docs/send-invoice/) | Sending, attachments, allowances, delivery |
+| [Credit Notes](https://getpeppr.dev/docs/credit-notes/) | Correcting and cancelling invoices |
+| [Receiving Invoices](https://getpeppr.dev/docs/receiving/) | Fetching incoming invoices |
+| [Validation](https://getpeppr.dev/docs/validation/) | Client-side validation before sending |
+| [Document Status](https://getpeppr.dev/docs/document-status/) | Tracking delivery lifecycle |
+| [Webhooks](https://getpeppr.dev/docs/webhooks/) | Real-time event notifications |
+| [Error Handling](https://getpeppr.dev/docs/error-handling/) | Error types, status codes, retries |
+| [Type Definitions](https://getpeppr.dev/docs/types/) | TypeScript interface reference |
 
 ---
 
@@ -195,7 +201,7 @@ import { webhooks } from "@getpeppr/sdk";
 
 const event = await webhooks.constructEvent(
   rawBody,                    // raw request body string
-  req.headers["x-b2brouter-signature"],
+  req.headers["x-webhook-secret"],
   process.env.WEBHOOK_SECRET
 );
 

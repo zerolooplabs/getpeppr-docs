@@ -1,6 +1,6 @@
 import { Peppol } from "@getpeppr/sdk";
 
-const peppol = new Peppol({ apiKey: "pk_live_..." });
+const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
 // Send an invoice
 const result = await peppol.invoices.send({

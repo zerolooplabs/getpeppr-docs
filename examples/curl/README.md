@@ -122,6 +122,81 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/inv_abc123/mark-as \
   -d '{"state": "paid"}'
 ```
 
+### Send a credit note
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/invoices/send \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "number": "CN-2026-001",
+    "isCreditNote": true,
+    "invoiceReference": "INV-2026-001",
+    "from": {
+      "name": "Acme BVBA",
+      "peppolId": "0208:BE0456789012",
+      "country": "BE"
+    },
+    "to": {
+      "name": "Globex NV",
+      "peppolId": "0208:BE0987654321",
+      "country": "BE"
+    },
+    "lines": [{
+      "description": "Consulting — refund",
+      "quantity": 1,
+      "unitPrice": 1000,
+      "vatRate": 21
+    }]
+  }'
+```
+
+### Send with allowances and charges
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/invoices/send \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "number": "INV-2026-050",
+    "from": {
+      "name": "Acme BVBA",
+      "peppolId": "0208:BE0456789012",
+      "country": "BE"
+    },
+    "to": {
+      "name": "Globex NV",
+      "peppolId": "0208:BE0987654321",
+      "country": "BE"
+    },
+    "lines": [{
+      "description": "Consulting",
+      "quantity": 10,
+      "unitPrice": 500,
+      "vatRate": 21,
+      "allowances": [{ "reason": "Volume discount", "amount": 200 }]
+    }],
+    "allowances": [{ "reason": "Annual contract discount", "amount": 100, "vatRate": 21 }],
+    "charges": [{ "reason": "Handling fee", "amount": 50, "vatRate": 21 }]
+  }'
+```
+
+### Export invoice as XML
+
+```bash
+curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/xml.ubl.invoice.bis3 \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -o invoice.xml
+```
+
+### Export invoice as JSON
+
+```bash
+curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/original \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -o invoice.json
+```
+
 ## Validation
 
 ### Validate an invoice
@@ -298,5 +373,12 @@ curl -X DELETE https://api.getpeppr.dev/v1/transports/email \
 
 ```bash
 curl https://api.getpeppr.dev/v1/directory/0208/BE0456789012 \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Lookup with colon format
+
+```bash
+curl https://api.getpeppr.dev/v1/directory/0208:BE0456789012 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```

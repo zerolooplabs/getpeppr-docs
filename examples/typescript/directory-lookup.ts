@@ -5,7 +5,7 @@
  * before sending them an invoice.
  */
 
-import { Peppol } from "@getpeppr/sdk";
+import { Peppol, PeppolApiError } from "@getpeppr/sdk";
 
 const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
@@ -18,6 +18,12 @@ if (participant) {
   console.log(`Found: ${participant.name}`);
   console.log(`Country: ${participant.country}`);
   console.log(`Capabilities: ${participant.capabilities.join(", ")}`);
+  // Enriched fields (optional — available when the directory provides them)
+  if (participant.registrationDate) console.log(`Registered: ${participant.registrationDate}`);
+  if (participant.vatNumber) console.log(`VAT: ${participant.vatNumber}`);
+  if (participant.website) console.log(`Website: ${participant.website}`);
+  if (participant.contactInfo) console.log(`Contact: ${JSON.stringify(participant.contactInfo)}`);
+  if (participant.additionalIds) console.log(`Additional IDs: ${JSON.stringify(participant.additionalIds)}`);
 } else {
   console.log("Participant not found on Peppol network");
 }
@@ -35,3 +41,43 @@ if (!buyer) {
 }
 
 console.log(`Recipient verified: ${buyer.name} — safe to send`);
+
+// ─── Search the Peppol Directory ─────────────────────────────
+
+// Search by name
+const searchResults = await peppol.directory.search({
+  name: "Acme",
+  country: "BE",
+  limit: 10,
+});
+
+console.log(`Found ${searchResults.meta.totalCount} participants`);
+for (const entry of searchResults.data) {
+  console.log(`  ${entry.name} (${entry.peppolId}) — ${entry.country}`);
+  console.log(`  Capabilities: ${entry.capabilities.join(", ")}`);
+  if (entry.registrationDate) console.log(`  Registered: ${entry.registrationDate}`);
+  if (entry.vatNumber) console.log(`  VAT: ${entry.vatNumber}`);
+  if (entry.website) console.log(`  Website: ${entry.website}`);
+}
+
+// Search by VAT number (country prefix auto-stripped)
+const vatResults = await peppol.directory.searchByVat("BE0685660237");
+console.log(`VAT search found ${vatResults.meta.totalCount} results`);
+
+// ─── Pre-send recipient validation ──────────────────────────
+
+// Warn mode (default) — sends even if recipient not found
+const result = await peppol.invoices.send(invoice, {
+  validateRecipient: "warn",
+});
+
+// Strict mode — rejects with error if recipient not found
+try {
+  const strictResult = await peppol.invoices.send(invoice, {
+    validateRecipient: "strict",
+  });
+} catch (err) {
+  if (err instanceof PeppolApiError && err.status === 422) {
+    console.error("Recipient not registered on Peppol network");
+  }
+}

@@ -382,3 +382,41 @@ curl https://api.getpeppr.dev/v1/directory/0208/BE0456789012 \
 curl https://api.getpeppr.dev/v1/directory/0208:BE0456789012 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
+
+### Search the Peppol Directory
+
+Search by name:
+
+```bash
+curl -X GET "https://api.getpeppr.dev/v1/directory/search?name=Acme&country=BE&limit=10" \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+Search by VAT number:
+
+```bash
+curl -X GET "https://api.getpeppr.dev/v1/directory/search?vatNumber=BE0685660237" \
+  -H "Authorization: Bearer sk_sandbox_abc123..."
+```
+
+### Pre-send recipient validation
+
+Warn mode (non-blocking):
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/invoices \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -H "x-validate-recipient: warn" \
+  -d @invoice.json
+```
+
+Strict mode (rejects if recipient not found):
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/invoices \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -H "x-validate-recipient: strict" \
+  -d @invoice.json
+```

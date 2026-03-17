@@ -21,6 +21,17 @@ if response.status_code == 200:
     print(f"Found: {participant['name']}")
     print(f"Country: {participant['country']}")
     print(f"Capabilities: {', '.join(participant['capabilities'])}")
+    # Enriched fields (optional — available when the directory provides them)
+    if participant.get("registrationDate"):
+        print(f"Registered: {participant['registrationDate']}")
+    if participant.get("vatNumber"):
+        print(f"VAT: {participant['vatNumber']}")
+    if participant.get("website"):
+        print(f"Website: {participant['website']}")
+    if participant.get("contactInfo"):
+        print(f"Contact: {participant['contactInfo']}")
+    if participant.get("additionalIds"):
+        print(f"Additional IDs: {participant['additionalIds']}")
 elif response.status_code == 404:
     print("Participant not found on Peppol network")
 else:
@@ -43,3 +54,43 @@ if response.status_code == 200:
     print(f"Recipient verified: {buyer['name']} — safe to send")
 else:
     print(f"Recipient {buyer_peppol_id} is not reachable on Peppol")
+
+
+# -- Search the Peppol Directory -----------------------------------------------
+
+# Search by name and country
+response = requests.get(
+    f"{BASE_URL}/v1/directory/search",
+    params={"name": "Acme", "country": "BE", "limit": 10},
+    headers=HEADERS,
+    timeout=30,
+)
+data = response.json()
+print(f"Found {data['meta']['totalCount']} participants")
+for entry in data["data"]:
+    print(f"  {entry['name']} ({entry['peppolId']}) — {entry['country']}")
+    print(f"  Capabilities: {', '.join(entry['capabilities'])}")
+    if entry.get("registrationDate"):
+        print(f"  Registered: {entry['registrationDate']}")
+
+# Search by VAT number
+response = requests.get(
+    f"{BASE_URL}/v1/directory/search",
+    params={"vatNumber": "BE0685660237"},
+    headers=HEADERS,
+    timeout=30,
+)
+
+
+# -- Pre-send recipient validation ---------------------------------------------
+
+# Strict mode — fails if recipient not on Peppol network
+invoice_data = {"number": "INV-2026-001"}  # ... full invoice payload
+response = requests.post(
+    f"{BASE_URL}/v1/invoices",
+    json=invoice_data,
+    headers={**HEADERS, "x-validate-recipient": "strict"},
+    timeout=30,
+)
+if response.status_code == 422:
+    print("Recipient not found in Peppol Directory")

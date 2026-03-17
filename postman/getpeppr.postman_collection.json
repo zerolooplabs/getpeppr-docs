@@ -59,6 +59,12 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
+              },
+              {
+                "key": "x-validate-recipient",
+                "value": "warn",
+                "description": "Pre-send recipient validation: 'warn' (default, non-blocking) or 'strict' (rejects if not found)",
+                "disabled": true
               }
             ],
             "url": {
@@ -542,6 +548,25 @@
               "variable": [
                 { "key": "scheme", "value": "0208" },
                 { "key": "id", "value": "BE0456789012" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Search Directory",
+          "request": {
+            "method": "GET",
+            "description": "Search the Peppol Directory for participants by name, country, or VAT number",
+            "url": {
+              "raw": "{{base_url}}/v1/directory/search?name=Acme&country=BE&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "directory", "search"],
+              "query": [
+                { "key": "name", "value": "Acme", "description": "Business name to search for" },
+                { "key": "country", "value": "BE", "description": "ISO 3166-1 alpha-2 country code" },
+                { "key": "vatNumber", "value": "", "description": "VAT number (country prefix auto-stripped)", "disabled": true },
+                { "key": "limit", "value": "10", "description": "Maximum number of results" },
+                { "key": "offset", "value": "0", "description": "Pagination offset", "disabled": true }
               ]
             }
           }

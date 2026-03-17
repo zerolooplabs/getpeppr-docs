@@ -73,13 +73,15 @@ for entry in data["data"]:
     if entry.get("registrationDate"):
         print(f"  Registered: {entry['registrationDate']}")
 
-# Search by VAT number
+# Search by VAT number (country prefix stripped server-side)
 response = requests.get(
     f"{BASE_URL}/v1/directory/search",
     params={"vatNumber": "BE0685660237"},
     headers=HEADERS,
     timeout=30,
 )
+vat_data = response.json()
+print(f"VAT search found {vat_data['meta']['totalCount']} results")
 
 
 # -- Pre-send recipient validation ---------------------------------------------

@@ -12,7 +12,7 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 // ── Lookup by Peppol ID ───────────────────────────────────
 // scheme 0208 = Belgian KBO/BCE number
 
-const participant = await peppol.directory.lookup("0208", "BE0123456789");
+const participant = await peppol.directory.lookup("0208:BE0123456789");
 
 if (participant) {
   console.log(`Found: ${participant.name}`);
@@ -32,9 +32,8 @@ if (participant) {
 // Common pattern: check the recipient exists before creating an invoice
 
 const buyerPeppolId = "0208:BE0987654321";
-const [scheme, id] = buyerPeppolId.split(":");
 
-const buyer = await peppol.directory.lookup(scheme, id);
+const buyer = await peppol.directory.lookup(buyerPeppolId);
 
 if (!buyer) {
   throw new Error(`Recipient ${buyerPeppolId} is not reachable on Peppol`);
@@ -60,13 +59,13 @@ for (const entry of searchResults.data) {
   if (entry.website) console.log(`  Website: ${entry.website}`);
 }
 
-// Search by VAT number (country prefix auto-stripped)
+// Search by VAT number (country prefix stripped server-side)
 const vatResults = await peppol.directory.searchByVat("BE0685660237");
 console.log(`VAT search found ${vatResults.meta.totalCount} results`);
 
 // ─── Pre-send recipient validation ──────────────────────────
 
-// Warn mode (default) — sends even if recipient not found
+// Non-blocking mode — sends even if recipient not found (no validation by default)
 const result = await peppol.invoices.send(invoice, {
   validateRecipient: "warn",
 });
@@ -77,7 +76,7 @@ try {
     validateRecipient: "strict",
   });
 } catch (err) {
-  if (err instanceof PeppolApiError && err.status === 422) {
+  if (err instanceof PeppolApiError && err.statusCode === 422) {
     console.error("Recipient not registered on Peppol network");
   }
 }

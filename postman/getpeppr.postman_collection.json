@@ -557,6 +557,12 @@
           "request": {
             "method": "GET",
             "description": "Search the Peppol Directory for participants by name, country, or VAT number",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_key}}"
+              }
+            ],
             "url": {
               "raw": "{{base_url}}/v1/directory/search?name=Acme&country=BE&limit=10",
               "host": ["{{base_url}}"],
@@ -564,7 +570,7 @@
               "query": [
                 { "key": "name", "value": "Acme", "description": "Business name to search for" },
                 { "key": "country", "value": "BE", "description": "ISO 3166-1 alpha-2 country code" },
-                { "key": "vatNumber", "value": "", "description": "VAT number (country prefix auto-stripped)", "disabled": true },
+                { "key": "vatNumber", "value": "", "description": "VAT number (country prefix stripped server-side)", "disabled": true },
                 { "key": "limit", "value": "10", "description": "Maximum number of results" },
                 { "key": "offset", "value": "0", "description": "Pagination offset", "disabled": true }
               ]

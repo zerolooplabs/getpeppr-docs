@@ -180,7 +180,7 @@ Status flow:
 | `GET` | `/v1/directory/:scheme/:id` | `directory.lookup()` | Lookup Peppol participant (enriched: name, country, capabilities, VAT, contacts, website) |
 | `GET` | `/v1/directory/search` | `directory.search()` | Search Peppol Directory by name, country, or VAT |
 
-Convenience method: `directory.searchByVat(vatNumber)` — searches by VAT number with automatic country prefix stripping.
+Convenience method: `directory.searchByVat(vatNumber)` — searches by VAT number (country prefix stripped server-side).
 
 ### Validation
 
@@ -220,7 +220,7 @@ console.log(event.type); // e.g. "invoice.delivered"
 Verify that a recipient is registered on the Peppol network before sending:
 
 ```typescript
-// Warn mode (default) — sends even if recipient not found
+// Non-blocking mode — sends even if recipient not found (omit for no validation)
 const invoice = await peppol.invoices.send(data, { validateRecipient: "warn" });
 
 // Strict mode — rejects with 422 if recipient not found

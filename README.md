@@ -26,7 +26,7 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 const invoice = await peppol.invoices.send({
   number: "INV-2026-001",
   from: { name: "Acme BVBA", peppolId: "0208:BE0456789012", country: "BE" },
-  to:   { name: "Globex NV", peppolId: "0208:BE0987654321", country: "BE" },
+  to:   { name: "Globex NV", peppolId: "0208:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
   lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
 });
 
@@ -49,6 +49,9 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
     "to": {
       "name": "Globex NV",
       "peppolId": "0208:BE0987654321",
+      "street": "Rue de la Loi 200",
+      "city": "Brussels",
+      "postalCode": "1000",
       "country": "BE"
     },
     "lines": [{

@@ -27,9 +27,12 @@ response = requests.post(
         "to": {
             "name": "Wayne Enterprises NV",
             "peppolId": "0208:BE0123456789",
+            "street": "Avenue Louise 54",
+            "city": "Brussels",
+            "postalCode": "1050",
             "country": "BE",
-            "buyerReference": "PO-2026-007",
         },
+        "buyerReference": "PO-2026-007",
         "lines": [
             {
                 "description": "Arc Reactor Maintenance Q1",

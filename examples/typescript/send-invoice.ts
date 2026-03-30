@@ -13,13 +13,16 @@ const result = await peppol.invoices.send({
     address: { street: "Rue de la Loi 1", city: "Brussels", postalCode: "1000", country: "BE" },
   },
 
-  // Buyer
+  // Buyer (street, city, postalCode required by Peppol BIS 3.0)
   to: {
     name: "Wayne Enterprises NV",
     peppolId: "0208:BE0123456789",
+    street: "Avenue Louise 54",
+    city: "Brussels",
+    postalCode: "1050",
     country: "BE",
-    buyerReference: "PO-2026-007",
   },
+  buyerReference: "PO-2026-007",
 
   // Line items
   lines: [

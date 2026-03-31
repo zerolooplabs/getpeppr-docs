@@ -30,7 +30,7 @@ const invoice = await peppol.invoices.send({
   lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
 });
 
-console.log(invoice.status); // "sent"
+console.log(invoice.status); // "submitted"
 ```
 
 ### 3. Send an invoice (cURL)
@@ -134,9 +134,9 @@ create (draft) → update → send → track status → acknowledge
 Status flow:
 
 ```
-"created" → "queued" → "sent" → "delivered" → "accepted"
-                                             → "rejected"
-                                → "failed"
+"submitted" → "delivered" → "accepted" → "paid"
+                           → "rejected"
+            → "failed"
 ```
 
 ### Credit Notes

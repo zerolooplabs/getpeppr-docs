@@ -9,16 +9,16 @@ const result = await peppol.invoices.send({
   to:   { name: "Globex NV", peppolId: "0208:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
   lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
 });
-console.log(result.status); // "queued"
+console.log(result.status); // "submitted"
 
 // Check status later
 const status = await peppol.invoices.getStatus(result.id);
 console.log(status.status);
 
 // Status flow:
-//   "created" → "queued" → "sent" → "delivered" → "accepted"
-//                                                → "rejected"
-//                                  → "failed"
+//   "submitted" → "delivered" → "accepted" → "paid"
+//                              → "rejected"
+//               → "failed"
 
 // Access Peppol message ID once sent
 if (status.peppolMessageId) {

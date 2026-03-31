@@ -22,7 +22,7 @@ app.post(
   "/webhooks/getpeppr",
   express.raw({ type: "application/json" }),
   async (req, res) => {
-    const signature = req.headers["x-b2brouter-signature"] as string;
+    const signature = req.headers["getpeppr-signature"] as string;
     const rawBody = req.body.toString("utf-8");
 
     let event: WebhookEvent;
@@ -71,7 +71,7 @@ app.listen(3000, () => console.log("Webhook server running on port 3000"));
 //
 // export async function POST(req: NextRequest) {
 //   const rawBody = await req.text();
-//   const signature = req.headers.get("x-b2brouter-signature") ?? "";
+//   const signature = req.headers.get("getpeppr-signature") ?? "";
 //
 //   try {
 //     const event = await webhooks.constructEvent(

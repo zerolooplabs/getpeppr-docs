@@ -39,7 +39,7 @@ const draft = await peppol.invoices.create({
 });
 
 console.log(`Draft created: ${draft.id} (status: ${draft.status})`);
-// → "submitted"
+// → "submitted" (draft created, not yet sent to Peppol)
 
 // ── Step 2: Update the draft (e.g., add a note) ────────────
 

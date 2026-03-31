@@ -65,6 +65,19 @@ console.log(`VAT search found ${vatResults.meta.totalCount} results`);
 
 // ─── Pre-send recipient validation ──────────────────────────
 
+const invoice = {
+  number: "INV-2026-001",
+  to: {
+    name: buyer.name,
+    peppolId: buyer.peppolId,
+    street: "Rue de la Loi 200",
+    city: "Brussels",
+    postalCode: "1000",
+    country: "BE" as const,
+  },
+  lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
+};
+
 // Non-blocking mode — sends even if recipient not found (no validation by default)
 const result = await peppol.invoices.send(invoice, {
   validateRecipient: "warn",

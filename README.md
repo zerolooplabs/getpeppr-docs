@@ -207,7 +207,7 @@ import { webhooks } from "@getpeppr/sdk";
 
 const event = await webhooks.constructEvent(
   rawBody,                    // raw request body string
-  req.headers["x-webhook-secret"],
+  req.headers["getpeppr-signature"],
   process.env.WEBHOOK_SECRET
 );
 

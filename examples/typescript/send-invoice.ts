@@ -5,14 +5,6 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 const result = await peppol.invoices.send({
   number: "INV-2026-042",
 
-  // Seller (you)
-  from: {
-    name: "Stark Industries BVBA",
-    peppolId: "0208:BE0476748862",
-    vatNumber: "BE0476748862",
-    address: { street: "Rue de la Loi 1", city: "Brussels", postalCode: "1000", country: "BE" },
-  },
-
   // Buyer (street, city, postalCode required by Peppol BIS 3.0)
   to: {
     name: "Wayne Enterprises NV",
@@ -35,7 +27,7 @@ const result = await peppol.invoices.send({
   paymentIban: "BE68539007547034",
 
   // Optional
-  issueDate: "2026-03-01",
+  date: "2026-03-01",
   dueDate: "2026-03-31",
   note: "Thank you for your business!",
 });

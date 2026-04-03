@@ -25,8 +25,7 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
 const invoice = await peppol.invoices.send({
   number: "INV-2026-001",
-  from: { name: "Acme BVBA", peppolId: "0208:BE0456789012", country: "BE" },
-  to:   { name: "Globex NV", peppolId: "0208:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
+  to: { name: "Globex NV", peppolId: "0208:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
   lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
 });
 
@@ -41,11 +40,6 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
   -H "Content-Type: application/json" \
   -d '{
     "number": "INV-2026-001",
-    "from": {
-      "name": "Acme BVBA",
-      "peppolId": "0208:BE0456789012",
-      "country": "BE"
-    },
     "to": {
       "name": "Globex NV",
       "peppolId": "0208:BE0987654321",
@@ -120,12 +114,12 @@ create (draft) → update → send → track status → acknowledge
 | Method | Endpoint | SDK Method | Description |
 |--------|----------|------------|-------------|
 | `POST` | `/v1/invoices` | `invoices.create()` | Create a draft invoice |
-| `PATCH` | `/v1/invoices/:id` | `invoices.update()` | Update a draft invoice |
+| `PUT` | `/v1/invoices/:id` | `invoices.update()` | Update a draft invoice |
 | `DELETE` | `/v1/invoices/:id` | `invoices.delete()` | Delete an invoice |
 | `POST` | `/v1/invoices/send` | `invoices.send()` | Validate, create, and send in one step |
-| `POST` | `/v1/invoices/:id/send` | `invoices.sendById()` | Send an existing draft |
+| `POST` | `/v1/invoices/send/:id` | `invoices.sendById()` | Send an existing draft |
 | `GET` | `/v1/invoices` | `invoices.list()` | List invoices (paginated) |
-| `GET` | `/v1/invoices/:id/status` | `invoices.getStatus()` | Check delivery status |
+| `GET` | `/v1/invoices/:id` | `invoices.getStatus()` | Get invoice details and delivery status |
 | `GET` | `/v1/invoices/:id/as/:format` | `invoices.getAs()` | Export as PDF, XML, or JSON |
 | `POST` | `/v1/invoices/:id/ack` | `invoices.acknowledge()` | Acknowledge a received invoice |
 | `POST` | `/v1/invoices/:id/mark-as` | `invoices.markAs()` | Transition state (accepted, rejected, paid) |
@@ -175,6 +169,8 @@ Status flow:
 | `POST` | `/v1/transports` | `transports.create()` | Create a transport |
 | `PATCH` | `/v1/transports/:code` | `transports.update()` | Update a transport |
 | `DELETE` | `/v1/transports/:code` | `transports.delete()` | Delete a transport |
+
+> **Note:** Transports are managed automatically by the Peppol network. These endpoints return static transport configurations — creating, updating, or deleting transports has no effect on invoice delivery routing.
 
 ### Directory
 
@@ -243,6 +239,8 @@ for await (const invoice of peppol.invoices.listAll()) {
 ```
 
 Also available on `contacts.listAll()`, `bankAccounts.listAll()`, and `events.listAll()`.
+
+> **Note:** `invoices.list()` returns outbound invoice submissions (invoices you sent). There is currently no endpoint for received invoices.
 
 ### Batch Send
 

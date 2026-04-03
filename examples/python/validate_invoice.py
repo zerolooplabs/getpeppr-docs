@@ -13,14 +13,12 @@ response = requests.post(
     },
     json={
         "number": "INV-2026-042",
-        "from": {
-            "name": "Acme BVBA",
-            "peppolId": "0208:BE0456789012",
-            "country": "BE",
-        },
         "to": {
             "name": "Globex NV",
             "peppolId": "0208:BE0987654321",
+            "street": "Rue de la Loi 200",
+            "city": "Brussels",
+            "postalCode": "1000",
             "country": "BE",
         },
         "lines": [

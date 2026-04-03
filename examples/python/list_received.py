@@ -1,4 +1,4 @@
-"""List received invoices from your Peppol inbox."""
+"""List your invoices via the getpeppr API."""
 
 import requests
 
@@ -13,11 +13,9 @@ response = requests.get(
 )
 
 response.raise_for_status()
-invoices = response.json()
+result = response.json()
 
-for doc in invoices:
-    print(f"From:     {doc['invoice']['from']['name']}")
-    print(f"Invoice:  {doc['invoice']['number']}")
-    print(f"Received: {doc['receivedAt']}")
-    print(f"Lines:    {len(doc['invoice']['lines'])}")
-    print("---")
+print(f"Total invoices: {result['meta']['total']} (showing {len(result['data'])})")
+
+for invoice in result["data"]:
+    print(f"  {invoice['id']}: {invoice['number']} — {invoice['status']}")

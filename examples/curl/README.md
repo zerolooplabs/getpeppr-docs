@@ -12,11 +12,6 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
   -H "Content-Type: application/json" \
   -d '{
     "number": "INV-2026-001",
-    "from": {
-      "name": "Acme BVBA",
-      "peppolId": "0208:BE0456789012",
-      "country": "BE"
-    },
     "to": {
       "name": "Globex NV",
       "peppolId": "0208:BE0987654321",
@@ -42,11 +37,6 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
   -H "Content-Type: application/json" \
   -d '{
     "number": "INV-2026-002",
-    "from": {
-      "name": "Acme BVBA",
-      "peppolId": "0208:BE0456789012",
-      "country": "BE"
-    },
     "to": {
       "name": "Globex NV",
       "peppolId": "0208:BE0987654321",
@@ -67,14 +57,14 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
 ### Send a draft by ID
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/inv_abc123/send \
+curl -X POST https://api.getpeppr.dev/v1/invoices/send/inv_abc123 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
 ### Update a draft invoice
 
 ```bash
-curl -X PATCH https://api.getpeppr.dev/v1/invoices/inv_abc123 \
+curl -X PUT https://api.getpeppr.dev/v1/invoices/inv_abc123 \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -97,10 +87,10 @@ curl https://api.getpeppr.dev/v1/invoices?limit=10&offset=0 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
-### Check invoice status
+### Get invoice details
 
 ```bash
-curl https://api.getpeppr.dev/v1/invoices/inv_abc123/status \
+curl https://api.getpeppr.dev/v1/invoices/inv_abc123 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
@@ -138,11 +128,6 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
     "number": "CN-2026-001",
     "isCreditNote": true,
     "invoiceReference": "INV-2026-001",
-    "from": {
-      "name": "Acme BVBA",
-      "peppolId": "0208:BE0456789012",
-      "country": "BE"
-    },
     "to": {
       "name": "Globex NV",
       "peppolId": "0208:BE0987654321",
@@ -168,11 +153,6 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
   -H "Content-Type: application/json" \
   -d '{
     "number": "INV-2026-050",
-    "from": {
-      "name": "Acme BVBA",
-      "peppolId": "0208:BE0456789012",
-      "country": "BE"
-    },
     "to": {
       "name": "Globex NV",
       "peppolId": "0208:BE0987654321",
@@ -219,11 +199,6 @@ curl -X POST https://api.getpeppr.dev/v1/validate \
   -H "Content-Type: application/json" \
   -d '{
     "number": "INV-2026-001",
-    "from": {
-      "name": "Acme BVBA",
-      "peppolId": "0208:BE0456789012",
-      "country": "BE"
-    },
     "to": {
       "name": "Globex NV",
       "peppolId": "0208:BE0987654321",

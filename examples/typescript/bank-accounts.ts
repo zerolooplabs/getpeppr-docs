@@ -22,7 +22,7 @@ console.log(`Created: ${account.id} — ${account.name}`);
 // ── List bank accounts ────────────────────────────────────
 
 const page = await peppol.bankAccounts.list({ limit: 20 });
-console.log(`Found ${page.meta.total} bank accounts`);
+console.log(`Found ${page.meta.totalCount} bank accounts`);
 
 for (const ba of page.data) {
   console.log(`  ${ba.id}: ${ba.name} (${ba.iban ?? ba.number})`);

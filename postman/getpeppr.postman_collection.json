@@ -168,7 +168,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"ublXml\": \"<Invoice xmlns='urn:oasis:names:specification:ubl:schema:xsd:Invoice-2'>...</Invoice>\"\n}"
+              "raw": "{\n  \"file\": \"<base64-encoded-xml-or-pdf>\",\n  \"filename\": \"invoice.xml\"\n}"
             }
           }
         },

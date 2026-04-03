@@ -28,7 +28,7 @@ console.log(`Created contact: ${contact.id} — ${contact.name}`);
 // ── List all contacts ───────────────────────────────────────
 
 const page = await peppol.contacts.list({ limit: 20 });
-console.log(`Found ${page.meta.total} contacts (showing ${page.data.length})`);
+console.log(`Found ${page.meta.totalCount} contacts (showing ${page.data.length})`);
 
 for (const c of page.data) {
   console.log(`  ${c.id}: ${c.name} (${c.peppolId})`);

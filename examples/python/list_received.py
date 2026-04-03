@@ -15,7 +15,7 @@ response = requests.get(
 response.raise_for_status()
 result = response.json()
 
-print(f"Total invoices: {result['meta']['total']} (showing {len(result['data'])})")
+print(f"Total invoices: {result['meta']['total_count']} (showing {len(result['data'])})")
 
 for invoice in result["data"]:
     print(f"  {invoice['id']}: {invoice['number']} — {invoice['status']}")

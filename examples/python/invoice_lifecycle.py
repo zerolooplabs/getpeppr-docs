@@ -19,23 +19,15 @@ response = requests.post(
     headers=HEADERS,
     json={
         "number": "INV-2026-100",
-        "from": {
-            "name": "Stark Industries BVBA",
-            "peppolId": "0208:BE0476748862",
-            "vatNumber": "BE0476748862",
-            "address": {
-                "street": "Rue de la Loi 1",
-                "city": "Brussels",
-                "postalCode": "1000",
-                "country": "BE",
-            },
-        },
         "to": {
             "name": "Wayne Enterprises NV",
             "peppolId": "0208:BE0123456789",
+            "street": "Avenue Louise 54",
+            "city": "Brussels",
+            "postalCode": "1050",
             "country": "BE",
-            "buyerReference": "PO-2026-007",
         },
+        "buyerReference": "PO-2026-007",
         "lines": [
             {
                 "description": "Arc Reactor Maintenance Q1",
@@ -52,7 +44,7 @@ response = requests.post(
         ],
         "paymentTerms": "Net 30 days",
         "paymentIban": "BE68539007547034",
-        "issueDate": "2026-03-01",
+        "date": "2026-03-01",
         "dueDate": "2026-03-31",
     },
     timeout=30,
@@ -65,7 +57,7 @@ print(f"Draft created: {invoice_id} (status: {draft['status']})")
 
 # -- Step 2: Update the draft -------------------------------------------------
 
-response = requests.patch(
+response = requests.put(
     f"{BASE_URL}/v1/invoices/{invoice_id}",
     headers=HEADERS,
     json={
@@ -82,7 +74,7 @@ print(f"Updated: due date is now {updated.get('dueDate')}")
 # -- Step 3: Send the draft ----------------------------------------------------
 
 response = requests.post(
-    f"{BASE_URL}/v1/invoices/{invoice_id}/send",
+    f"{BASE_URL}/v1/invoices/send/{invoice_id}",
     headers={"Authorization": f"Bearer {API_KEY}"},
     timeout=30,
 )
@@ -95,7 +87,7 @@ print("Invoice sent!")
 for _ in range(20):  # poll up to 20 times (60 seconds)
     time.sleep(3)
     response = requests.get(
-        f"{BASE_URL}/v1/invoices/{invoice_id}/status",
+        f"{BASE_URL}/v1/invoices/{invoice_id}",
         headers={"Authorization": f"Bearer {API_KEY}"},
         timeout=30,
     )

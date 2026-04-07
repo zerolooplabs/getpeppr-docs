@@ -162,7 +162,7 @@ Invoices are immutable after submission — there are no drafts, updates, or del
 | `GET` | `/v1/transports` | `transports.list()` | List configured transports |
 | `GET` | `/v1/transports/:code` | `transports.get()` | Get transport details |
 | `POST` | `/v1/transports` | `transports.create()` | Create a transport |
-| `PATCH` | `/v1/transports/:code` | `transports.update()` | Update a transport |
+| `PUT` | `/v1/transports/:code` | `transports.update()` | Update a transport |
 | `DELETE` | `/v1/transports/:code` | `transports.delete()` | Delete a transport |
 
 > **Note:** Transports are managed automatically by the Peppol network. These endpoints return static transport configurations — creating, updating, or deleting transports has no effect on invoice delivery routing.

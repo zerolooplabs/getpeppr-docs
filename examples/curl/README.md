@@ -272,7 +272,7 @@ curl -X POST https://api.getpeppr.dev/v1/transports \
 ### Update a transport
 
 ```bash
-curl -X PATCH https://api.getpeppr.dev/v1/transports/email \
+curl -X PUT https://api.getpeppr.dev/v1/transports/email \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -d '{

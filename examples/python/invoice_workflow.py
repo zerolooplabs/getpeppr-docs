@@ -1,4 +1,8 @@
-"""Invoice lifecycle via the getpeppr API — draft, send, track, export."""
+"""Invoice workflow via the getpeppr API — send, track, export.
+
+There are no drafts — invoices are submitted immediately to the Peppol network.
+To correct an invoice, send a credit note instead.
+"""
 
 import time
 import requests
@@ -12,10 +16,10 @@ HEADERS = {
 }
 
 
-# -- Step 1: Create a draft invoice -------------------------------------------
+# -- Step 1: Send an invoice -----------------------------------------------------
 
 response = requests.post(
-    f"{BASE_URL}/v1/invoices",
+    f"{BASE_URL}/v1/invoices/send",
     headers=HEADERS,
     json={
         "number": "INV-2026-100",
@@ -50,39 +54,12 @@ response = requests.post(
     timeout=30,
 )
 response.raise_for_status()
-draft = response.json()
-invoice_id = draft["id"]
-print(f"Draft created: {invoice_id} (status: {draft['status']})")
+result = response.json()
+invoice_id = result["id"]
+print(f"Invoice sent: {invoice_id} (status: {result['status']})")
 
 
-# -- Step 2: Update the draft -------------------------------------------------
-
-response = requests.put(
-    f"{BASE_URL}/v1/invoices/{invoice_id}",
-    headers=HEADERS,
-    json={
-        "note": "Thank you for your continued partnership!",
-        "dueDate": "2026-04-15",
-    },
-    timeout=30,
-)
-response.raise_for_status()
-updated = response.json()
-print(f"Updated: due date is now {updated.get('dueDate')}")
-
-
-# -- Step 3: Send the draft ----------------------------------------------------
-
-response = requests.post(
-    f"{BASE_URL}/v1/invoices/send/{invoice_id}",
-    headers={"Authorization": f"Bearer {API_KEY}"},
-    timeout=30,
-)
-response.raise_for_status()
-print("Invoice sent!")
-
-
-# -- Step 4: Poll for delivery status ------------------------------------------
+# -- Step 2: Poll for delivery status --------------------------------------------
 
 for _ in range(20):  # poll up to 20 times (60 seconds)
     time.sleep(3)
@@ -95,11 +72,11 @@ for _ in range(20):  # poll up to 20 times (60 seconds)
     status = response.json()
     print(f"Status: {status['status']}")
 
-    if status["status"] in ("accepted", "rejected", "failed"):
+    if status["status"] in ("delivered", "accepted", "rejected", "failed"):
         break
 
 
-# -- Step 5: Export as PDF -----------------------------------------------------
+# -- Step 3: Export as PDF -------------------------------------------------------
 
 response = requests.get(
     f"{BASE_URL}/v1/invoices/{invoice_id}/as/pdf",
@@ -111,16 +88,3 @@ response.raise_for_status()
 with open("INV-2026-100.pdf", "wb") as f:
     f.write(response.content)
 print(f"PDF saved ({len(response.content)} bytes)")
-
-
-# -- Step 6: Mark as paid (optional) -------------------------------------------
-
-response = requests.post(
-    f"{BASE_URL}/v1/invoices/{invoice_id}/mark-as",
-    headers=HEADERS,
-    json={"state": "paid"},
-    timeout=30,
-)
-response.raise_for_status()
-result = response.json()
-print(f"Marked as: {result['status']}")

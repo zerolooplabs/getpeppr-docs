@@ -120,15 +120,13 @@ send → track status → export (PDF, XML, JSON)
 | `GET` | `/v1/invoices/:id` | `invoices.getStatus()` | Get invoice details and delivery status |
 | `GET` | `/v1/invoices/:id/as/:format` | `invoices.getAs()` | Export as PDF, XML, or JSON |
 
-Status flow:
+Invoices are immutable after submission — there are no drafts, updates, or deletes. To correct an invoice, send a credit note.
 
 ```
 "submitted" → "delivered" → "accepted" → "paid"
                            → "rejected"
             → "failed"
 ```
-
-> **Note:** Invoices are immutable after submission. There are no drafts, updates, or deletes. To correct an invoice, send a credit note.
 
 ### Credit Notes
 

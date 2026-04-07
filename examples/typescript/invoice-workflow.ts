@@ -35,7 +35,7 @@ const result = await peppol.invoices.send({
 
   paymentTerms: "Net 30 days",
   paymentIban: "BE68539007547034",
-  issueDate: "2026-03-01",
+  date: "2026-03-01",
   dueDate: "2026-03-31",
 });
 

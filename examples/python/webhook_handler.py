@@ -19,12 +19,18 @@ WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"]
 
 def verify_signature(raw_body: bytes, signature_header: str, secret: str) -> bool:
     """Verify the Getpeppr-Signature header using HMAC-SHA256."""
+    if not signature_header:
+        return False
+
     parts = dict(pair.split("=", 1) for pair in signature_header.split(","))
     timestamp = parts.get("t", "")
     received_sig = parts.get("s", "")
 
     # Reject signatures older than 5 minutes
-    if abs(time.time() - int(timestamp)) > 300:
+    try:
+        if abs(time.time() - int(timestamp)) > 300:
+            return False
+    except ValueError:
         return False
 
     payload = f"{timestamp}.{raw_body.decode('utf-8')}"

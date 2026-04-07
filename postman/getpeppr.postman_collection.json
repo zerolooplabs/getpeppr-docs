@@ -365,7 +365,7 @@
         {
           "name": "Update Transport",
           "request": {
-            "method": "PATCH",
+            "method": "PUT",
             "header": [
               {
                 "key": "Content-Type",

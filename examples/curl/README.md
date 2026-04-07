@@ -29,57 +29,6 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
   }'
 ```
 
-### Create a draft invoice
-
-```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices \
-  -H "Authorization: Bearer sk_sandbox_abc123..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "number": "INV-2026-002",
-    "to": {
-      "name": "Globex NV",
-      "peppolId": "0208:BE0987654321",
-      "street": "Rue de la Loi 200",
-      "city": "Brussels",
-      "postalCode": "1000",
-      "country": "BE"
-    },
-    "lines": [{
-      "description": "Consulting",
-      "quantity": 1,
-      "unitPrice": 1000,
-      "vatRate": 21
-    }]
-  }'
-```
-
-### Send a draft by ID
-
-```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/send/inv_abc123 \
-  -H "Authorization: Bearer sk_sandbox_abc123..."
-```
-
-### Update a draft invoice
-
-```bash
-curl -X PUT https://api.getpeppr.dev/v1/invoices/inv_abc123 \
-  -H "Authorization: Bearer sk_sandbox_abc123..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "note": "Updated payment terms",
-    "dueDate": "2026-04-15"
-  }'
-```
-
-### Delete an invoice
-
-```bash
-curl -X DELETE https://api.getpeppr.dev/v1/invoices/inv_abc123 \
-  -H "Authorization: Bearer sk_sandbox_abc123..."
-```
-
 ### List invoices
 
 ```bash
@@ -100,22 +49,6 @@ curl https://api.getpeppr.dev/v1/invoices/inv_abc123 \
 curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/pdf \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -o invoice.pdf
-```
-
-### Acknowledge a received invoice
-
-```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/inv_abc123/ack \
-  -H "Authorization: Bearer sk_sandbox_abc123..."
-```
-
-### Mark invoice as accepted/rejected/paid
-
-```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/inv_abc123/mark-as \
-  -H "Authorization: Bearer sk_sandbox_abc123..." \
-  -H "Content-Type: application/json" \
-  -d '{"state": "paid"}'
 ```
 
 ### Send a credit note
@@ -394,7 +327,7 @@ curl -X GET "https://api.getpeppr.dev/v1/directory/search?vatNumber=BE0685660237
 Warn mode (non-blocking):
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices \
+curl -X POST https://api.getpeppr.dev/v1/invoices/send \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -H "x-validate-recipient: warn" \
@@ -404,7 +337,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
 Strict mode (rejects if recipient not found):
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices \
+curl -X POST https://api.getpeppr.dev/v1/invoices/send \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -H "x-validate-recipient: strict" \

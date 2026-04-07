@@ -66,14 +66,18 @@ Full documentation is available at **[getpeppr.dev/docs](https://getpeppr.dev/do
 | Guide | Description |
 |-------|-------------|
 | [Quick Start](https://getpeppr.dev/docs/) | Installation, first invoice, configuration |
+| [Onboarding Setup](https://getpeppr.dev/docs/onboarding/) | Legal entity and Peppol identity setup |
 | [Authentication](https://getpeppr.dev/docs/authentication/) | API keys, environments, rate limits |
+| [Sandbox](https://getpeppr.dev/docs/sandbox/) | Sandbox limitations, quotas, and going to production |
 | [Send an Invoice](https://getpeppr.dev/docs/send-invoice/) | Sending, attachments, allowances, delivery |
 | [Credit Notes](https://getpeppr.dev/docs/credit-notes/) | Correcting and cancelling invoices |
-| [Receiving Invoices](https://getpeppr.dev/docs/receiving/) | Fetching incoming invoices |
+| [Listing Invoices](https://getpeppr.dev/docs/receiving/) | Browsing your sent invoices |
 | [Validation](https://getpeppr.dev/docs/validation/) | Client-side validation before sending |
+| [Contacts & Directory](https://getpeppr.dev/docs/contacts/) | Contact management and Peppol Directory lookup |
 | [Document Status](https://getpeppr.dev/docs/document-status/) | Tracking delivery lifecycle |
 | [Webhooks](https://getpeppr.dev/docs/webhooks/) | Real-time event notifications |
 | [Error Handling](https://getpeppr.dev/docs/error-handling/) | Error types, status codes, retries |
+| [CLI](https://getpeppr.dev/docs/cli/) | Command-line validation tool |
 | [Type Definitions](https://getpeppr.dev/docs/types/) | TypeScript interface reference |
 
 ---
@@ -103,27 +107,18 @@ Import the collection into Postman for interactive API exploration.
 
 ### Invoice Lifecycle
 
-Create a draft, review it, send it, then track delivery:
+Send an invoice, track its delivery, and export it:
 
 ```
-create (draft) → update → send → track status → acknowledge
-                                               → export (PDF, XML, JSON)
-                                               → mark as (accepted, rejected, paid)
+send → track status → export (PDF, XML, JSON)
 ```
 
 | Method | Endpoint | SDK Method | Description |
 |--------|----------|------------|-------------|
-| `POST` | `/v1/invoices` | `invoices.create()` | Create a draft invoice |
-| `PUT` | `/v1/invoices/:id` | `invoices.update()` | Update a draft invoice |
-| `DELETE` | `/v1/invoices/:id` | `invoices.delete()` | Delete an invoice |
 | `POST` | `/v1/invoices/send` | `invoices.send()` | Validate, create, and send in one step |
-| `POST` | `/v1/invoices/send/:id` | `invoices.sendById()` | Send an existing draft |
 | `GET` | `/v1/invoices` | `invoices.list()` | List invoices (paginated) |
 | `GET` | `/v1/invoices/:id` | `invoices.getStatus()` | Get invoice details and delivery status |
 | `GET` | `/v1/invoices/:id/as/:format` | `invoices.getAs()` | Export as PDF, XML, or JSON |
-| `POST` | `/v1/invoices/:id/ack` | `invoices.acknowledge()` | Acknowledge a received invoice |
-| `POST` | `/v1/invoices/:id/mark-as` | `invoices.markAs()` | Transition state (accepted, rejected, paid) |
-| `POST` | `/v1/invoices/import` | `invoices.importFile()` | Import from XML/PDF |
 
 Status flow:
 
@@ -133,11 +128,13 @@ Status flow:
             → "failed"
 ```
 
+> **Note:** Invoices are immutable after submission. There are no drafts, updates, or deletes. To correct an invoice, send a credit note.
+
 ### Credit Notes
 
 | Method | Endpoint | SDK Method | Description |
 |--------|----------|------------|-------------|
-| `POST` | `/v1/invoices/send` | `creditNotes.send()` | Send a credit note (must reference an invoice) |
+| `POST` | `/v1/invoices/send` | `invoices.send()` | Send a credit note (`isCreditNote: true`, must include `invoiceReference`) |
 
 ### Contacts
 
@@ -185,8 +182,7 @@ Convenience method: `directory.searchByVat(vatNumber)` — searches by VAT numbe
 
 | Method | Endpoint | SDK Method | Description |
 |--------|----------|------------|-------------|
-| `POST` | `/v1/validate` | `peppol.validate()` | Validate invoice (client-side rules) |
-| `POST` | `/v1/validate/server` | `invoices.validateServer()` | Validate invoice (server-side, full XSD + Schematron) |
+| `POST` | `/v1/validate` | `peppol.validate()` | Validate invoice (client-side rules, BIS 3.0 + country-specific) |
 
 ### Events
 

@@ -1,3 +1,10 @@
+/**
+ * List Invoices Example
+ *
+ * List your sent invoices with pagination, or iterate through all of them.
+ * Note: invoices.list() returns outbound submissions only (invoices you sent).
+ */
+
 import { Peppol } from "@getpeppr/sdk";
 
 const peppol = new Peppol({ apiKey: "sk_sandbox_..." });

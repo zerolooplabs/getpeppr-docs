@@ -1,4 +1,7 @@
-"""List your invoices via the getpeppr API."""
+"""List your sent invoices via the getpeppr API.
+
+Note: GET /v1/invoices returns outbound submissions only (invoices you sent).
+"""
 
 import requests
 

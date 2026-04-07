@@ -31,27 +31,6 @@
       "name": "Invoices",
       "item": [
         {
-          "name": "Create Draft Invoice",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/invoices",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
-            }
-          }
-        },
-        {
           "name": "Send Invoice",
           "request": {
             "method": "POST",
@@ -100,79 +79,6 @@
           }
         },
         {
-          "name": "Send Draft by ID",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{base_url}}/v1/invoices/send/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", "send", ":id"],
-              "variable": [
-                { "key": "id", "value": "inv_abc123" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Update Invoice",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/invoices/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", ":id"],
-              "variable": [
-                { "key": "id", "value": "inv_abc123" }
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"note\": \"Updated payment terms\",\n  \"dueDate\": \"2026-04-15\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete Invoice",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/v1/invoices/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", ":id"],
-              "variable": [
-                { "key": "id", "value": "inv_abc123" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Import Invoice",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/invoices/import",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", "import"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"file\": \"<base64-encoded-xml-or-pdf>\",\n  \"filename\": \"invoice.xml\"\n}"
-            }
-          }
-        },
-        {
           "name": "List Invoices",
           "request": {
             "method": "GET",
@@ -213,44 +119,6 @@
                 { "key": "id", "value": "inv_abc123" },
                 { "key": "format", "value": "pdf" }
               ]
-            }
-          }
-        },
-        {
-          "name": "Acknowledge Invoice",
-          "request": {
-            "method": "POST",
-            "url": {
-              "raw": "{{base_url}}/v1/invoices/:id/ack",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", ":id", "ack"],
-              "variable": [
-                { "key": "id", "value": "inv_abc123" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Mark Invoice As (accepted/rejected/paid)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/invoices/:id/mark-as",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", ":id", "mark-as"],
-              "variable": [
-                { "key": "id", "value": "inv_abc123" }
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"state\": \"paid\"\n}"
             }
           }
         }
@@ -596,27 +464,6 @@
               "raw": "{{base_url}}/v1/validate",
               "host": ["{{base_url}}"],
               "path": ["v1", "validate"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
-            }
-          }
-        },
-        {
-          "name": "Validate Invoice (Server)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/validate/server",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "validate", "server"]
             },
             "body": {
               "mode": "raw",

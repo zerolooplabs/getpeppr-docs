@@ -13,19 +13,15 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 const result = await peppol.invoices.send({
   number: "INV-2026-099",
 
-  from: {
-    name: "Stark Industries BVBA",
-    peppolId: "0208:BE0476748862",
-    vatNumber: "BE0476748862",
-    country: "BE",
-  },
-
   to: {
     name: "Wayne Enterprises NV",
     peppolId: "0208:BE0123456789",
+    street: "Avenue Louise 54",
+    city: "Brussels",
+    postalCode: "1050",
     country: "BE",
-    buyerReference: "PO-2026-099",
   },
+  buyerReference: "PO-2026-099",
 
   lines: [
     {

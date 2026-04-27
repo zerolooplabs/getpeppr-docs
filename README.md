@@ -57,6 +57,24 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
   }'
 ```
 
+### 4. Send an invoice (CLI)
+
+```bash
+# Install once
+npm install -g @getpeppr/cli
+
+# Authenticate (sandbox by default)
+getpeppr login --key sk_sandbox_abc123... --sandbox
+
+# Send a JSON file and watch delivery status
+getpeppr send invoice.json --watch
+
+# Or synthesize a quick test invoice from flags
+getpeppr send --to 0208:BE0987654321 --amount 1000 --desc "Consulting"
+```
+
+The CLI also handles offline validation (`getpeppr validate`), scaffolding (`getpeppr init`), UBL conversion (`getpeppr convert`), and Peppol Directory lookups (`getpeppr lookup`).
+
 ---
 
 ## Documentation
@@ -77,7 +95,7 @@ Full documentation is available at **[getpeppr.dev/docs](https://getpeppr.dev/do
 | [Document Status](https://getpeppr.dev/docs/document-status/) | Tracking delivery lifecycle |
 | [Webhooks](https://getpeppr.dev/docs/webhooks/) | Real-time event notifications |
 | [Error Handling](https://getpeppr.dev/docs/error-handling/) | Error types, status codes, retries |
-| [CLI](https://getpeppr.dev/docs/cli/) | Command-line validation tool |
+| [CLI](https://getpeppr.dev/docs/cli/) | Send invoices, manage credentials, validate, scaffold, convert, and lookup — all from the terminal |
 | [Type Definitions](https://getpeppr.dev/docs/types/) | TypeScript interface reference |
 
 ---

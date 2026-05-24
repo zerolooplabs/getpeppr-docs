@@ -149,6 +149,35 @@ curl -X POST https://api.getpeppr.dev/v1/validate \
   }'
 ```
 
+### Validate an invoice server-side
+
+The gateway runs the same SDK validation stack, verifies UBL XML generation under
+`ubl`, and returns validation findings as HTTP `200` with `valid: false`.
+The `xsd` field is deprecated compatibility metadata and mirrors `ubl.valid`.
+
+```bash
+curl -X POST https://api.getpeppr.dev/v1/validate/server \
+  -H "Authorization: Bearer sk_sandbox_abc123..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "number": "INV-2026-001",
+    "to": {
+      "name": "Globex NV",
+      "peppolId": "0208:BE0987654321",
+      "street": "Rue de la Loi 200",
+      "city": "Brussels",
+      "postalCode": "1000",
+      "country": "BE"
+    },
+    "lines": [{
+      "description": "Consulting",
+      "quantity": 1,
+      "unitPrice": 1000,
+      "vatRate": 21
+    }]
+  }'
+```
+
 ## Contacts
 
 ### List contacts

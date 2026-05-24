@@ -90,7 +90,7 @@ Full documentation is available at **[getpeppr.dev/docs](https://getpeppr.dev/do
 | [Send an Invoice](https://getpeppr.dev/docs/send-invoice/) | Sending, attachments, allowances, delivery |
 | [Credit Notes](https://getpeppr.dev/docs/credit-notes/) | Correcting and cancelling invoices |
 | [Listing Invoices](https://getpeppr.dev/docs/receiving/) | Browsing your sent invoices |
-| [Validation](https://getpeppr.dev/docs/validation/) | Client-side validation before sending |
+| [Validation](https://getpeppr.dev/docs/validation/) | Client-side and server-side validation before sending |
 | [Contacts & Directory](https://getpeppr.dev/docs/contacts/) | Contact management and Peppol Directory lookup |
 | [Document Status](https://getpeppr.dev/docs/document-status/) | Tracking delivery lifecycle |
 | [Webhooks](https://getpeppr.dev/docs/webhooks/) | Real-time event notifications |
@@ -199,6 +199,7 @@ Convenience method: `directory.searchByVat(vatNumber)` — searches by VAT numbe
 | Method | Endpoint | SDK Method | Description |
 |--------|----------|------------|-------------|
 | `POST` | `/v1/validate` | `peppol.validate()` | Validate invoice (client-side rules, BIS 3.0 + country-specific) |
+| `POST` | `/v1/validate/server` | `invoices.validateServer()` | Gateway-side validation with SDK checks, UBL generation status, and offline Peppol business rules |
 
 ### Events
 

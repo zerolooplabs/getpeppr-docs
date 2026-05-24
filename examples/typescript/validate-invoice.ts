@@ -32,3 +32,23 @@ if (!result.valid) {
 for (const warning of result.warnings) {
   console.warn(`[${warning.field}] ${warning.message}`);
 }
+
+// Server-side validation runs through the gateway, checks UBL generation, and
+// returns HTTP 200 with valid:false for validation findings.
+const serverResult = await peppol.invoices.validateServer({
+  number: "INV-2026-043",
+  to: {
+    name: "Globex NV",
+    peppolId: "0208:BE0987654321",
+    street: "Rue de la Loi 200",
+    city: "Brussels",
+    postalCode: "1000",
+    country: "BE",
+  },
+  lines: [
+    { description: "Consulting Q2", quantity: 10, unitPrice: 125, vatRate: 21 },
+  ],
+});
+
+console.log("UBL generation:", serverResult.ubl.valid);
+console.log("Schematron:", serverResult.schematron.valid);

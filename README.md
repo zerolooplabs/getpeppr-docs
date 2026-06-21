@@ -94,6 +94,7 @@ Full documentation is available at **[getpeppr.dev/docs](https://getpeppr.dev/do
 | [Contacts & Directory](https://getpeppr.dev/docs/contacts/) | Contact management and Peppol Directory lookup |
 | [Document Status](https://getpeppr.dev/docs/document-status/) | Tracking delivery lifecycle |
 | [Webhooks](https://getpeppr.dev/docs/webhooks/) | Real-time event notifications |
+| [Platform & Multi-Tenant](https://getpeppr.dev/docs/platform/) | Sending on behalf of sub-tenants, legal entity lifecycle, and platform webhooks |
 | [Error Handling](https://getpeppr.dev/docs/error-handling/) | Error types, status codes, retries |
 | [CLI](https://getpeppr.dev/docs/cli/) | Send invoices, manage credentials, validate, scaffold, convert, and lookup — all from the terminal |
 | [Type Definitions](https://getpeppr.dev/docs/types/) | TypeScript interface reference |
@@ -220,8 +221,35 @@ const event = await webhooks.constructEvent(
   process.env.WEBHOOK_SECRET
 );
 
-console.log(event.type); // e.g. "invoice.delivered"
+console.log(event.type); // e.g. "invoice.sent"
 ```
+
+| Event | Description |
+|-------|-------------|
+| `invoice.sent` | Invoice successfully delivered to recipient's access point |
+| `invoice.accepted` | Recipient accepted the invoice |
+| `invoice.refused` | Recipient rejected the invoice |
+| `invoice.error` | Delivery failed (final state) |
+| `invoice.registered` | Cleared by tax authority (e.g., KSA, PT) |
+| `invoice.received` | Receipt acknowledged by recipient |
+| `invoice.paid` | Payment confirmed by recipient |
+| `legal_entity.registered` | Platform sub-tenant reached a verified or active state |
+| `legal_entity.verification_failed` | Platform sub-tenant registry verification failed |
+| `legal_entity.awaiting_authz` | Platform sub-tenant authorisation email is awaiting customer action |
+| `inbound.invoice.received` | An invoice addressed to your Legal Entity was received from the Peppol network (pilot — contact support to enable) |
+| `inbound.creditnote.received` | A credit note addressed to your Legal Entity was received from the Peppol network (pilot — contact support to enable) |
+| `test.ping` | Test event sent during endpoint setup |
+| `*` | Wildcard — subscribes to all event types |
+
+See the full [Webhooks guide](https://getpeppr.dev/docs/webhooks/) for payload shapes, the `Getpeppr-Signature` format, and retry behaviour.
+
+#### Inbound Reception (Pilot)
+
+When a supplier on the Peppol network sends an invoice or credit note **to** one of your Legal Entities, getpeppr stores the document and dispatches an `inbound.invoice.received` or `inbound.creditnote.received` event. This is a pilot feature — contact [support@getpeppr.dev](mailto:support@getpeppr.dev) to enable it for your account.
+
+> **Not to be confused with `invoice.received`** — that outbound event means a document _you sent_ was acknowledged by the recipient's access point. The `inbound.*` events mean a document was sent _to you_ by a third party.
+
+Delivery is at-least-once: **deduplicate on `data.receivedDocumentId`**, the stable idempotency key for inbound events (one received document, one id, however many deliveries). The UBL XML is embedded in the payload as base64 (`data.document.content`) for documents up to 512 KB; larger documents set `content` to `null` with `contentOmittedReason: "size"`. There is no retrieval API for received documents yet — one is planned for a future release.
 
 ---
 
@@ -253,7 +281,7 @@ for await (const invoice of peppol.invoices.listAll()) {
 
 Also available on `contacts.listAll()`, `bankAccounts.listAll()`, and `events.listAll()`.
 
-> **Note:** `invoices.list()` returns outbound invoice submissions (invoices you sent). There is currently no endpoint for received invoices.
+> **Note:** `invoices.list()` returns outbound invoice submissions (invoices you sent). Inbound documents (invoices and credit notes sent _to_ you) are delivered through the `inbound.*` webhook events (pilot — contact support to enable); a retrieval API for received documents is planned for a future release.
 
 ### Batch Send
 

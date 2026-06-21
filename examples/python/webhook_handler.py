@@ -54,14 +54,23 @@ def handle_webhook() -> Response:
     event = json.loads(raw_body)
 
     match event["type"]:
-        case "invoice.delivered":
-            print(f"Invoice {event['data']['id']} was delivered via Peppol")
+        case "invoice.sent":
+            print(f"Invoice {event['data']['invoiceId']} was delivered to the recipient's access point")
         case "invoice.accepted":
-            print(f"Invoice {event['data']['id']} was accepted by the recipient")
-        case "invoice.rejected":
-            print(f"Invoice {event['data']['id']} was rejected: {event['data'].get('reason')}")
-        case "invoice.failed":
-            print(f"Invoice {event['data']['id']} delivery failed")
+            print(f"Invoice {event['data']['invoiceId']} was accepted by the recipient")
+        case "invoice.refused":
+            print(f"Invoice {event['data']['invoiceId']} was refused by the recipient")
+        case "invoice.error":
+            print(f"Invoice {event['data']['invoiceId']} delivery failed")
+        case "invoice.paid":
+            print(f"Invoice {event['data']['invoiceId']} was paid")
+        # Inbound reception (pilot — contact support to enable): a supplier sent
+        # a document TO one of your Legal Entities. Delivery is at-least-once —
+        # deduplicate on data.receivedDocumentId, the stable idempotency key.
+        case "inbound.invoice.received":
+            print(f"Received an invoice ({event['data']['receivedDocumentId']}) from the Peppol network")
+        case "inbound.creditnote.received":
+            print(f"Received a credit note ({event['data']['receivedDocumentId']}) from the Peppol network")
         case _:
             print(f"Unhandled event type: {event['type']}")
 

@@ -36,20 +36,35 @@ app.post(
 
     // Process the event
     switch (event.type) {
-      case "invoice.delivered":
-        console.log(`Invoice ${event.data.id} was delivered via Peppol`);
+      case "invoice.sent":
+        console.log(`Invoice ${event.data.invoiceId} was delivered to the recipient's access point`);
         break;
 
       case "invoice.accepted":
-        console.log(`Invoice ${event.data.id} was accepted by the recipient`);
+        console.log(`Invoice ${event.data.invoiceId} was accepted by the recipient`);
         break;
 
-      case "invoice.rejected":
-        console.log(`Invoice ${event.data.id} was rejected: ${event.data.reason}`);
+      case "invoice.refused":
+        console.error(`Invoice ${event.data.invoiceId} was refused by the recipient`);
         break;
 
-      case "invoice.failed":
-        console.error(`Invoice ${event.data.id} delivery failed`);
+      case "invoice.error":
+        console.error(`Invoice ${event.data.invoiceId} delivery failed`);
+        break;
+
+      case "invoice.paid":
+        console.log(`Invoice ${event.data.invoiceId} was paid`);
+        break;
+
+      // Inbound reception (pilot — contact support to enable): a supplier sent
+      // a document TO one of your Legal Entities. Delivery is at-least-once —
+      // deduplicate on data.receivedDocumentId, the stable idempotency key.
+      case "inbound.invoice.received":
+        console.log(`Received an invoice (${event.data.receivedDocumentId}) from the Peppol network`);
+        break;
+
+      case "inbound.creditnote.received":
+        console.log(`Received a credit note (${event.data.receivedDocumentId}) from the Peppol network`);
         break;
 
       default:

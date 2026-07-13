@@ -56,6 +56,12 @@ app.post(
         console.log(`Invoice ${event.data.invoiceId} was paid`);
         break;
 
+      // Not deliverable: no receiving capability found for the recipient on the
+      // Peppol network. Final state for this send — fix the recipient, then re-send.
+      case "invoice.undeliverable":
+        console.error(`Invoice ${event.data.invoiceId} is not deliverable (recipient not found on the network)`);
+        break;
+
       // Inbound reception (pilot — contact support to enable): a supplier sent
       // a document TO one of your Legal Entities. Delivery is at-least-once —
       // deduplicate on data.receivedDocumentId, the stable idempotency key.

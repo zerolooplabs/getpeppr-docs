@@ -233,9 +233,13 @@ console.log(event.type); // e.g. "invoice.sent"
 | `invoice.registered` | Cleared by tax authority (e.g., KSA, PT) |
 | `invoice.received` | Receipt acknowledged by recipient |
 | `invoice.paid` | Payment confirmed by recipient |
+| `invoice.undeliverable` | Not deliverable — no receiving capability found for the recipient on the Peppol network (final state for the send; payload carries `status: "no_action"`) |
 | `legal_entity.registered` | Platform sub-tenant reached a verified or active state |
 | `legal_entity.verification_failed` | Platform sub-tenant registry verification failed |
 | `legal_entity.awaiting_authz` | Platform sub-tenant authorisation email is awaiting customer action |
+| `legal_entity.registration_failed` | Platform sub-tenant identity verified but network (SMP) registration failed |
+| `peppol_identifier.verified` | A Peppol identifier completed registry verification |
+| `peppol_identifier.verification_failed` | A Peppol identifier failed registry verification |
 | `inbound.invoice.received` | An invoice addressed to your Legal Entity was received from the Peppol network (pilot — contact support to enable) |
 | `inbound.creditnote.received` | A credit note addressed to your Legal Entity was received from the Peppol network (pilot — contact support to enable) |
 | `test.ping` | Test event sent during endpoint setup |

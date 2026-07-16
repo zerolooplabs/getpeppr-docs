@@ -92,6 +92,7 @@ Full documentation is available at **[getpeppr.dev/docs](https://getpeppr.dev/do
 | [Listing Invoices](https://getpeppr.dev/docs/receiving/) | Browsing your sent invoices |
 | [Validation](https://getpeppr.dev/docs/validation/) | Client-side and server-side validation before sending |
 | [Contacts & Directory](https://getpeppr.dev/docs/contacts/) | Contact management and Peppol Directory lookup |
+| [France](https://getpeppr.dev/docs/france/) | Domestic French B2B under the 2026 reform — SIREN/SIRET, directory registration, French statuses, payment reporting |
 | [Document Status](https://getpeppr.dev/docs/document-status/) | Tracking delivery lifecycle |
 | [Webhooks](https://getpeppr.dev/docs/webhooks/) | Real-time event notifications |
 | [Platform & Multi-Tenant](https://getpeppr.dev/docs/platform/) | Sending on behalf of sub-tenants, legal entity lifecycle, and platform webhooks |

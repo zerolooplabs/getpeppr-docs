@@ -254,7 +254,15 @@ When a supplier on the Peppol network sends an invoice or credit note **to** one
 
 > **Not to be confused with `invoice.received`** — that outbound event means a document _you sent_ was acknowledged by the recipient's access point. The `inbound.*` events mean a document was sent _to you_ by a third party.
 
-Delivery is at-least-once: **deduplicate on `data.receivedDocumentId`**, the stable idempotency key for inbound events (one received document, one id, however many deliveries). The UBL XML is embedded in the payload as base64 (`data.document.content`) for documents up to 512 KB; larger documents set `content` to `null` with `contentOmittedReason: "size"`. There is no retrieval API for received documents yet — one is planned for a future release.
+Delivery is at-least-once: **deduplicate on `data.receivedDocumentId`**, the stable idempotency key for inbound events (one received document, one id, however many deliveries). The UBL XML is embedded in the payload as base64 (`data.document.content`) for documents up to 512 KB; larger documents set `content` to `null` with `contentOmittedReason: "size"`. Fetch those — and any document you did not persist — from the retrieval API:
+
+```
+GET /v1/received-documents                 # paginated list, newest first
+GET /v1/received-documents/{id}            # one document
+GET /v1/received-documents/{id}/as/xml     # the original UBL, byte for byte
+```
+
+Use `data.receivedDocumentId` as `{id}`. The list accepts `limit`, `offset`, and `legalEntityId` to filter by receiving Legal Entity. Results are scoped to your account **and to the environment of your API key** — a sandbox key never returns production documents.
 
 ---
 
@@ -286,7 +294,7 @@ for await (const invoice of peppol.invoices.listAll()) {
 
 Also available on `contacts.listAll()`, `bankAccounts.listAll()`, and `events.listAll()`.
 
-> **Note:** `invoices.list()` returns outbound invoice submissions (invoices you sent). Inbound documents (invoices and credit notes sent _to_ you) are delivered through the `inbound.*` webhook events (pilot — contact support to enable); a retrieval API for received documents is planned for a future release.
+> **Note:** `invoices.list()` returns outbound invoice submissions (invoices you sent). Inbound documents (invoices and credit notes sent _to_ you) are delivered through the `inbound.*` webhook events (pilot — contact support to enable) and can be read back from `GET /v1/received-documents` (see [Inbound Reception](#inbound-reception-pilot)). **The SDK does not wrap those endpoints yet** — call them over HTTP with your API key in the meantime.
 
 ### Batch Send
 

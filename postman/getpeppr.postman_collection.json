@@ -131,14 +131,14 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "inv_abc123"
+                  "value": "d7d09754-864d-458c-ad00-35811861608c"
                 }
               ]
             }
           }
         },
         {
-          "name": "Export Invoice (PDF/XML/JSON)",
+          "name": "Export Invoice (PDF or UBL XML)",
           "request": {
             "method": "GET",
             "url": {
@@ -156,7 +156,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "inv_abc123"
+                  "value": "d7d09754-864d-458c-ad00-35811861608c"
                 },
                 {
                   "key": "format",
@@ -204,7 +204,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "ct_abc123"
+                  "value": "ac50912b-e9f8-4b4f-a7a6-30c8b42bdf5d"
                 }
               ]
             }
@@ -259,7 +259,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "ct_abc123"
+                  "value": "ac50912b-e9f8-4b4f-a7a6-30c8b42bdf5d"
                 }
               ]
             },
@@ -286,7 +286,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "ct_abc123"
+                  "value": "ac50912b-e9f8-4b4f-a7a6-30c8b42bdf5d"
                 }
               ]
             }
@@ -330,7 +330,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "ba_abc123"
+                  "value": "c6e3063b-5e10-42d1-afbf-d5e1aadea37c"
                 }
               ]
             }
@@ -385,7 +385,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "ba_abc123"
+                  "value": "c6e3063b-5e10-42d1-afbf-d5e1aadea37c"
                 }
               ]
             },
@@ -412,7 +412,7 @@
               "variable": [
                 {
                   "key": "id",
-                  "value": "ba_abc123"
+                  "value": "c6e3063b-5e10-42d1-afbf-d5e1aadea37c"
                 }
               ]
             }

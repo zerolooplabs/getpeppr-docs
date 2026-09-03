@@ -19,7 +19,7 @@ HEADERS = {
 # -- Step 1: Send an invoice -----------------------------------------------------
 
 response = requests.post(
-    f"{BASE_URL}/v1/invoices/send",
+    f"{BASE_URL}/v1/invoices",
     headers=HEADERS,
     json={
         "number": "INV-2026-100",
@@ -72,7 +72,7 @@ for _ in range(20):  # poll up to 20 times (60 seconds)
     status = response.json()
     print(f"Status: {status['status']}")
 
-    if status["status"] in ("delivered", "accepted", "rejected", "failed"):
+    if status["status"] in ("delivered", "accepted", "rejected", "failed", "no_action"):
         break
 
 

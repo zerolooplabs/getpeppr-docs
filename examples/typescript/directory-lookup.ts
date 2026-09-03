@@ -12,7 +12,14 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 // ── Lookup by Peppol ID ───────────────────────────────────
 // scheme 0208 = Belgian KBO/BCE number
 
-const participant = await peppol.directory.lookup("0208:BE0123456789");
+// lookup() THROWS a PeppolApiError with statusCode 404 when the participant is
+// not on the network — it never resolves to null.
+let participant;
+try {
+  participant = await peppol.directory.lookup("0208:BE0123456789");
+} catch (err) {
+  if (!(err instanceof PeppolApiError && err.statusCode === 404)) throw err;
+}
 
 if (participant) {
   console.log(`Found: ${participant.name}`);
@@ -33,10 +40,14 @@ if (participant) {
 
 const buyerPeppolId = "0208:BE0987654321";
 
-const buyer = await peppol.directory.lookup(buyerPeppolId);
-
-if (!buyer) {
-  throw new Error(`Recipient ${buyerPeppolId} is not reachable on Peppol`);
+let buyer;
+try {
+  buyer = await peppol.directory.lookup(buyerPeppolId);
+} catch (err) {
+  if (err instanceof PeppolApiError && err.statusCode === 404) {
+    throw new Error(`Recipient ${buyerPeppolId} is not reachable on Peppol`);
+  }
+  throw err;
 }
 
 console.log(`Recipient verified: ${buyer.name} — safe to send`);

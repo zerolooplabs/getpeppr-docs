@@ -10,8 +10,8 @@ const result = await peppol.invoices.send({
 });
 console.log(result.status); // "submitted"
 
-// Check status later
-const status = await peppol.invoices.getStatus(result.id);
+// Check status later — includeEvidence adds peppolMessageId once the network has it
+const status = await peppol.invoices.getStatus(result.id, { includeEvidence: true });
 console.log(status.status);
 
 // Status flow:

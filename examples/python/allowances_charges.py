@@ -6,7 +6,7 @@ BASE_URL = "https://api.getpeppr.dev"
 API_KEY = "sk_sandbox_abc123..."
 
 response = requests.post(
-    f"{BASE_URL}/v1/invoices/send",
+    f"{BASE_URL}/v1/invoices",
     headers={
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json",

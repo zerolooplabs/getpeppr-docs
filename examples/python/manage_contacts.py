@@ -46,7 +46,7 @@ response = requests.get(
 response.raise_for_status()
 result = response.json()
 
-print(f"Found {result['meta']['total']} contacts")
+print(f"Found {result['meta']['total_count']} contacts")
 for c in result["data"]:
     print(f"  {c['id']}: {c['name']} ({c.get('peppolId', 'N/A')})")
 

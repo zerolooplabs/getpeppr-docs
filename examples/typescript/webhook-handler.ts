@@ -34,43 +34,45 @@ app.post(
       return res.status(400).send("Invalid signature");
     }
 
-    // Process the event
+    // Process the event. `event.data` is `unknown` on the envelope type —
+    // narrow it before reading fields.
+    const data = event.data as { invoiceId?: string; receivedDocumentId?: string };
     switch (event.type) {
       case "invoice.sent":
-        console.log(`Invoice ${event.data.invoiceId} was delivered to the recipient's access point`);
+        console.log(`Invoice ${data.invoiceId} was delivered to the recipient's access point`);
         break;
 
       case "invoice.accepted":
-        console.log(`Invoice ${event.data.invoiceId} was accepted by the recipient`);
+        console.log(`Invoice ${data.invoiceId} was accepted by the recipient`);
         break;
 
       case "invoice.refused":
-        console.error(`Invoice ${event.data.invoiceId} was refused by the recipient`);
+        console.error(`Invoice ${data.invoiceId} was refused by the recipient`);
         break;
 
       case "invoice.error":
-        console.error(`Invoice ${event.data.invoiceId} delivery failed`);
+        console.error(`Invoice ${data.invoiceId} delivery failed`);
         break;
 
       case "invoice.paid":
-        console.log(`Invoice ${event.data.invoiceId} was paid`);
+        console.log(`Invoice ${data.invoiceId} was paid`);
         break;
 
       // Not deliverable: no receiving capability found for the recipient on the
       // Peppol network. Final state for this send — fix the recipient, then re-send.
       case "invoice.undeliverable":
-        console.error(`Invoice ${event.data.invoiceId} is not deliverable (recipient not found on the network)`);
+        console.error(`Invoice ${data.invoiceId} is not deliverable (recipient not found on the network)`);
         break;
 
-      // Inbound reception (pilot — contact support to enable): a supplier sent
+      // Inbound reception (on for every Legal Entity, nothing to enable): a supplier sent
       // a document TO one of your Legal Entities. Delivery is at-least-once —
       // deduplicate on data.receivedDocumentId, the stable idempotency key.
       case "inbound.invoice.received":
-        console.log(`Received an invoice (${event.data.receivedDocumentId}) from the Peppol network`);
+        console.log(`Received an invoice (${data.receivedDocumentId}) from the Peppol network`);
         break;
 
       case "inbound.creditnote.received":
-        console.log(`Received a credit note (${event.data.receivedDocumentId}) from the Peppol network`);
+        console.log(`Received a credit note (${data.receivedDocumentId}) from the Peppol network`);
         break;
 
       default:

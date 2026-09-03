@@ -41,7 +41,7 @@ response = requests.get(
 response.raise_for_status()
 result = response.json()
 
-print(f"Found {result['meta']['total']} bank accounts")
+print(f"Found {result['meta']['total_count']} bank accounts")
 for ba in result["data"]:
     print(f"  {ba['id']}: {ba['name']} ({ba.get('iban', ba.get('number', 'N/A'))})")
 

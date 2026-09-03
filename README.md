@@ -332,4 +332,4 @@ const final = await peppol.invoices.waitFor(invoice.id, "accepted", {
 
 MIT — see [LICENSE](LICENSE).
 
-Built by [Zero Loop Labs](https://www.zerolooplabs.com).
+Built by Zero Loop Labs Ltd — [getpeppr.dev](https://getpeppr.dev).

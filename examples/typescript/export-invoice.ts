@@ -24,8 +24,9 @@ await writeFile("invoice.xml", Buffer.from(xml));
 console.log("Saved invoice.xml");
 
 // ── Export the document as transmitted (UBL XML, SBDH envelope included) ──
-// There is no JSON export: what left for the network is XML. "payload" returns
-// the same document without the envelope.
+// There is no JSON export: what left for the network is XML. The REST API also
+// serves /as/payload — the same document without the SBDH envelope — which the
+// SDK's DocumentFormat type does not yet list.
 
 const original = await peppol.invoices.getAs(invoiceId, "original");
 await writeFile("invoice-transmitted.xml", Buffer.from(original));

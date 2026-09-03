@@ -185,7 +185,7 @@ Invoices are immutable after submission — there are no drafts, updates, or del
 | `PUT` | `/v1/transports/:code` | `transports.update()` | Always `405 Method Not Allowed` |
 | `DELETE` | `/v1/transports/:code` | `transports.delete()` | Always `405 Method Not Allowed` |
 
-> **Note:** Transports are managed by the Peppol access point. The read endpoints return the single configured transport (`code: "peppol"`); POST, PUT and DELETE answer `405` with the result code `transports.managed_by_provider`, and the SDK methods above surface that as a `PeppolApiError`.
+> **Note:** Transports are managed by the Peppol access point. The read endpoints return the single configured transport (`id: "peppol"`, which is also the path segment); POST, PUT and DELETE answer `405` with the result code `transports.managed_by_provider`, and the SDK methods above surface that as a `PeppolApiError`.
 
 ### Directory
 

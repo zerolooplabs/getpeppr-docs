@@ -47,9 +47,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/invoices/send",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", "send"]
+              "raw": "{{base_url}}/v1/invoices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "invoices"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -68,9 +73,14 @@
               }
             ],
             "url": {
-              "raw": "{{base_url}}/v1/invoices/send",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", "send"]
+              "raw": "{{base_url}}/v1/invoices",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "invoices"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -84,11 +94,22 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/invoices?limit=10&offset=0",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "invoices"
+              ],
               "query": [
-                { "key": "limit", "value": "10" },
-                { "key": "offset", "value": "0" }
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
               ]
             }
           }
@@ -99,25 +120,48 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/invoices/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "invoices",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "inv_abc123" }
+                {
+                  "key": "id",
+                  "value": "d7d09754-864d-458c-ad00-35811861608c"
+                }
               ]
             }
           }
         },
         {
-          "name": "Export Invoice (PDF/XML/JSON)",
+          "name": "Export Invoice (PDF or UBL XML)",
           "request": {
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/invoices/:id/as/:format",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "invoices", ":id", "as", ":format"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "invoices",
+                ":id",
+                "as",
+                ":format"
+              ],
               "variable": [
-                { "key": "id", "value": "inv_abc123" },
-                { "key": "format", "value": "pdf" }
+                {
+                  "key": "id",
+                  "value": "d7d09754-864d-458c-ad00-35811861608c"
+                },
+                {
+                  "key": "format",
+                  "value": "pdf"
+                }
               ]
             }
           }
@@ -133,8 +177,13 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/contacts",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "contacts"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "contacts"
+              ]
             }
           }
         },
@@ -144,10 +193,19 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/contacts/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "contacts", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "contacts",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "ct_abc123" }
+                {
+                  "key": "id",
+                  "value": "ac50912b-e9f8-4b4f-a7a6-30c8b42bdf5d"
+                }
               ]
             }
           }
@@ -164,8 +222,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/contacts",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "contacts"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "contacts"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -185,10 +248,19 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/contacts/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "contacts", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "contacts",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "ct_abc123" }
+                {
+                  "key": "id",
+                  "value": "ac50912b-e9f8-4b4f-a7a6-30c8b42bdf5d"
+                }
               ]
             },
             "body": {
@@ -203,10 +275,19 @@
             "method": "DELETE",
             "url": {
               "raw": "{{base_url}}/v1/contacts/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "contacts", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "contacts",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "ct_abc123" }
+                {
+                  "key": "id",
+                  "value": "ac50912b-e9f8-4b4f-a7a6-30c8b42bdf5d"
+                }
               ]
             }
           }
@@ -222,8 +303,13 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/bank-accounts",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "bank-accounts"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "bank-accounts"
+              ]
             }
           }
         },
@@ -233,10 +319,19 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/bank-accounts/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "bank-accounts", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "bank-accounts",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "ba_abc123" }
+                {
+                  "key": "id",
+                  "value": "c6e3063b-5e10-42d1-afbf-d5e1aadea37c"
+                }
               ]
             }
           }
@@ -253,8 +348,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/bank-accounts",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "bank-accounts"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "bank-accounts"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -274,10 +374,19 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/bank-accounts/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "bank-accounts", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "bank-accounts",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "ba_abc123" }
+                {
+                  "key": "id",
+                  "value": "c6e3063b-5e10-42d1-afbf-d5e1aadea37c"
+                }
               ]
             },
             "body": {
@@ -292,10 +401,19 @@
             "method": "DELETE",
             "url": {
               "raw": "{{base_url}}/v1/bank-accounts/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "bank-accounts", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "bank-accounts",
+                ":id"
+              ],
               "variable": [
-                { "key": "id", "value": "ba_abc123" }
+                {
+                  "key": "id",
+                  "value": "c6e3063b-5e10-42d1-afbf-d5e1aadea37c"
+                }
               ]
             }
           }
@@ -311,8 +429,14 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/transports/types",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "transports", "types"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "transports",
+                "types"
+              ]
             }
           }
         },
@@ -322,8 +446,13 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/transports",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "transports"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "transports"
+              ]
             }
           }
         },
@@ -333,74 +462,25 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/transports/:code",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "transports", ":code"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "transports",
+                ":code"
+              ],
               "variable": [
-                { "key": "code", "value": "peppol_as4" }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Create Transport",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/transports",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "transports"]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"email\",\n  \"name\": \"Email Transport\",\n  \"config\": {\n    \"to\": \"invoices@example.com\"\n  }\n}"
-            }
-          }
-        },
-        {
-          "name": "Update Transport",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/v1/transports/:code",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "transports", ":code"],
-              "variable": [
-                { "key": "code", "value": "email" }
-              ]
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Email Transport\",\n  \"config\": {\n    \"to\": \"billing@example.com\"\n  }\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete Transport",
-          "request": {
-            "method": "DELETE",
-            "url": {
-              "raw": "{{base_url}}/v1/transports/:code",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "transports", ":code"],
-              "variable": [
-                { "key": "code", "value": "email" }
+                {
+                  "key": "code",
+                  "value": "peppol"
+                }
               ]
             }
           }
         }
-      ]
+      ],
+      "description": "Transports are read-only: the only configured transport is `peppol`. POST, PUT and DELETE answer 405 Method Not Allowed (`transports.managed_by_provider`)."
     },
     {
       "name": "Directory",
@@ -411,11 +491,24 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/directory/:scheme/:id",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "directory", ":scheme", ":id"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "directory",
+                ":scheme",
+                ":id"
+              ],
               "variable": [
-                { "key": "scheme", "value": "0208" },
-                { "key": "id", "value": "BE0456789012" }
+                {
+                  "key": "scheme",
+                  "value": "0208"
+                },
+                {
+                  "key": "id",
+                  "value": "BE0456789012"
+                }
               ]
             }
           }
@@ -433,14 +526,42 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/directory/search?name=Acme&country=BE&limit=10",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "directory", "search"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "directory",
+                "search"
+              ],
               "query": [
-                { "key": "name", "value": "Acme", "description": "Business name to search for" },
-                { "key": "country", "value": "BE", "description": "ISO 3166-1 alpha-2 country code" },
-                { "key": "vatNumber", "value": "", "description": "VAT number (country prefix stripped server-side)", "disabled": true },
-                { "key": "limit", "value": "10", "description": "Maximum number of results" },
-                { "key": "offset", "value": "0", "description": "Pagination offset", "disabled": true }
+                {
+                  "key": "name",
+                  "value": "Acme",
+                  "description": "Business name to search for"
+                },
+                {
+                  "key": "country",
+                  "value": "BE",
+                  "description": "ISO 3166-1 alpha-2 country code"
+                },
+                {
+                  "key": "vatNumber",
+                  "value": "",
+                  "description": "VAT number (country prefix stripped server-side)",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Maximum number of results"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Pagination offset",
+                  "disabled": true
+                }
               ]
             }
           }
@@ -462,8 +583,13 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/validate",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "validate"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "validate"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -483,8 +609,14 @@
             ],
             "url": {
               "raw": "{{base_url}}/v1/validate/server",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "validate", "server"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "validate",
+                "server"
+              ]
             },
             "body": {
               "mode": "raw",
@@ -503,13 +635,170 @@
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/events?limit=20",
-              "host": ["{{base_url}}"],
-              "path": ["v1", "events"],
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "events"
+              ],
               "query": [
-                { "key": "limit", "value": "20" }
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
               ]
             }
           }
+        }
+      ]
+    },
+    {
+      "name": "Identity & System",
+      "description": "Who am I on the network, what the provider supports, and what is deployed.",
+      "item": [
+        {
+          "name": "Get identity",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/identity",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "identity"
+              ]
+            },
+            "description": "Your own Legal Entity, identifiers and the sandbox first-send profile. Any API key."
+          },
+          "response": []
+        },
+        {
+          "name": "Get capabilities",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/capabilities",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "capabilities"
+              ]
+            },
+            "description": "Provider capabilities with status and notes."
+          },
+          "response": []
+        },
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "health"
+              ]
+            },
+            "description": "Public — database and cache checks only."
+          },
+          "response": []
+        },
+        {
+          "name": "Version",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/version",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "version"
+              ]
+            },
+            "description": "Public — the commit the API serves."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Received Documents",
+      "description": "Documents other Peppol participants sent TO your Legal Entities. Reception is on for every Legal Entity, nothing to enable.",
+      "item": [
+        {
+          "name": "List received documents",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/received-documents",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "received-documents"
+              ]
+            },
+            "description": "Paginated, newest first. Optional legalEntityId, limit, offset."
+          },
+          "response": []
+        },
+        {
+          "name": "Get received document",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/received-documents/:id",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "received-documents",
+                ":id"
+              ]
+            },
+            "description": "One received document with its metadata."
+          },
+          "response": []
+        },
+        {
+          "name": "Download received UBL",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/v1/received-documents/:id/as/xml",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "v1",
+                "received-documents",
+                ":id",
+                "as",
+                "xml"
+              ]
+            },
+            "description": "The UBL XML exactly as it arrived."
+          },
+          "response": []
         }
       ]
     }

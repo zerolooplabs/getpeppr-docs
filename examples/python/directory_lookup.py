@@ -66,7 +66,7 @@ response = requests.get(
     timeout=30,
 )
 data = response.json()
-print(f"Found {data['meta']['totalCount']} participants")
+print(f"Found {data['meta']['total_count']} participants")
 for entry in data["data"]:
     print(f"  {entry['name']} ({entry['peppolId']}) — {entry['country']}")
     print(f"  Capabilities: {', '.join(entry['capabilities'])}")
@@ -81,7 +81,7 @@ response = requests.get(
     timeout=30,
 )
 vat_data = response.json()
-print(f"VAT search found {vat_data['meta']['totalCount']} results")
+print(f"VAT search found {vat_data['meta']['total_count']} results")
 
 
 # -- Pre-send recipient validation ---------------------------------------------

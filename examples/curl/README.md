@@ -7,7 +7,7 @@ Replace `sk_sandbox_abc123...` with your actual API key.
 ### Send an invoice
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/send \
+curl -X POST https://api.getpeppr.dev/v1/invoices \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -32,7 +32,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
 ### List invoices
 
 ```bash
-curl https://api.getpeppr.dev/v1/invoices?limit=10&offset=0 \
+curl "https://api.getpeppr.dev/v1/invoices?limit=10&offset=0" \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
@@ -43,7 +43,7 @@ curl https://api.getpeppr.dev/v1/invoices/inv_abc123 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
-### Export invoice as PDF
+### Export invoice as PDF (when the provider produced one)
 
 ```bash
 curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/pdf \
@@ -51,10 +51,14 @@ curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/pdf \
   -o invoice.pdf
 ```
 
+> A PDF only exists when the access point rendered one for this document. When it did
+> not (the sandbox rarely does), the endpoint answers `200` with the UBL XML instead —
+> check the `Content-Type` header before trusting the file extension you chose.
+
 ### Send a credit note
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/send \
+curl -X POST https://api.getpeppr.dev/v1/invoices \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -81,7 +85,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
 ### Send with allowances and charges
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/send \
+curl -X POST https://api.getpeppr.dev/v1/invoices \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -114,13 +118,15 @@ curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/xml.ubl.invoice.bis3 \
   -o invoice.xml
 ```
 
-### Export invoice as JSON
+### Export the document as transmitted (UBL XML, SBDH envelope included)
 
 ```bash
 curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/original \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
-  -o invoice.json
+  -o invoice.xml
 ```
+
+Use `/as/payload` for the same document without the SBDH envelope. There is no JSON export: what left for the network is XML.
 
 ## Validation
 
@@ -279,45 +285,15 @@ curl https://api.getpeppr.dev/v1/transports \
 ### Get a transport
 
 ```bash
-curl https://api.getpeppr.dev/v1/transports/peppol_as4 \
+curl https://api.getpeppr.dev/v1/transports/peppol \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
-### Create a transport
+### Transports are read-only
 
-```bash
-curl -X POST https://api.getpeppr.dev/v1/transports \
-  -H "Authorization: Bearer sk_sandbox_abc123..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "code": "email",
-    "name": "Email Transport",
-    "config": {
-      "to": "invoices@example.com"
-    }
-  }'
-```
-
-### Update a transport
-
-```bash
-curl -X PUT https://api.getpeppr.dev/v1/transports/email \
-  -H "Authorization: Bearer sk_sandbox_abc123..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Updated Email Transport",
-    "config": {
-      "to": "billing@example.com"
-    }
-  }'
-```
-
-### Delete a transport
-
-```bash
-curl -X DELETE https://api.getpeppr.dev/v1/transports/email \
-  -H "Authorization: Bearer sk_sandbox_abc123..."
-```
+`POST /v1/transports`, `PUT /v1/transports/:code` and `DELETE /v1/transports/:code` always answer
+`405 Method Not Allowed` (result code `transports.managed_by_provider`): the transport is managed by
+the Peppol access point, and the only configured one is `peppol`.
 
 ## Directory
 
@@ -356,7 +332,7 @@ curl -X GET "https://api.getpeppr.dev/v1/directory/search?vatNumber=BE0685660237
 Warn mode (non-blocking):
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/send \
+curl -X POST https://api.getpeppr.dev/v1/invoices \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -H "x-validate-recipient: warn" \
@@ -366,7 +342,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices/send \
 Strict mode (rejects if recipient not found):
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/send \
+curl -X POST https://api.getpeppr.dev/v1/invoices \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -H "x-validate-recipient: strict" \

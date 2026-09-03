@@ -35,7 +35,7 @@ console.log(invoice.status); // "submitted"
 ### 3. Send an invoice (cURL)
 
 ```bash
-curl -X POST https://api.getpeppr.dev/v1/invoices/send \
+curl -X POST https://api.getpeppr.dev/v1/invoices \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -d '{
@@ -135,10 +135,10 @@ send → track status → export (PDF, XML, JSON)
 
 | Method | Endpoint | SDK Method | Description |
 |--------|----------|------------|-------------|
-| `POST` | `/v1/invoices/send` | `invoices.send()` | Validate, create, and send in one step |
+| `POST` | `/v1/invoices` | `invoices.send()` | Validate, create, and send in one step |
 | `GET` | `/v1/invoices` | `invoices.list()` | List invoices (paginated) |
 | `GET` | `/v1/invoices/:id` | `invoices.getStatus()` | Get invoice details and delivery status |
-| `GET` | `/v1/invoices/:id/as/:format` | `invoices.getAs()` | Export as PDF, XML, or JSON |
+| `GET` | `/v1/invoices/:id/as/:format` | `invoices.getAs()` | Download the transmitted document — UBL XML (`original`, `payload`, `xml.ubl.invoice.bis3`); `pdf` only when the provider produced one, otherwise the XML comes back (check `Content-Type`) |
 
 Invoices are immutable after submission — there are no drafts, updates, or deletes. To correct an invoice, send a credit note.
 
@@ -152,7 +152,7 @@ Invoices are immutable after submission — there are no drafts, updates, or del
 
 | Method | Endpoint | SDK Method | Description |
 |--------|----------|------------|-------------|
-| `POST` | `/v1/invoices/send` | `invoices.send()` | Send a credit note (`isCreditNote: true`, must include `invoiceReference`) |
+| `POST` | `/v1/invoices` | `invoices.send()` | Send a credit note (`isCreditNote: true`, must include `invoiceReference`) |
 
 ### Contacts
 
@@ -181,11 +181,11 @@ Invoices are immutable after submission — there are no drafts, updates, or del
 | `GET` | `/v1/transports/types` | `transports.listTypes()` | List available transport types |
 | `GET` | `/v1/transports` | `transports.list()` | List configured transports |
 | `GET` | `/v1/transports/:code` | `transports.get()` | Get transport details |
-| `POST` | `/v1/transports` | `transports.create()` | Create a transport |
-| `PUT` | `/v1/transports/:code` | `transports.update()` | Update a transport |
-| `DELETE` | `/v1/transports/:code` | `transports.delete()` | Delete a transport |
+| `POST` | `/v1/transports` | `transports.create()` | Always `405 Method Not Allowed` — transports are read-only |
+| `PUT` | `/v1/transports/:code` | `transports.update()` | Always `405 Method Not Allowed` |
+| `DELETE` | `/v1/transports/:code` | `transports.delete()` | Always `405 Method Not Allowed` |
 
-> **Note:** Transports are managed automatically by the Peppol network. These endpoints return static transport configurations — creating, updating, or deleting transports has no effect on invoice delivery routing.
+> **Note:** Transports are managed by the Peppol access point. The read endpoints return the single configured transport (`id: "peppol"`, which is also the path segment); POST, PUT and DELETE answer `405` with the result code `transports.managed_by_provider`, and the SDK methods above surface that as a `PeppolApiError`.
 
 ### Directory
 
@@ -200,7 +200,7 @@ Convenience method: `directory.searchByVat(vatNumber)` — searches by VAT numbe
 
 | Method | Endpoint | SDK Method | Description |
 |--------|----------|------------|-------------|
-| `POST` | `/v1/validate` | `peppol.validate()` | Validate invoice (client-side rules, BIS 3.0 + country-specific) |
+| `POST` | `/v1/validate` | — (`peppol.validate()` runs locally, without a network call) | Presence check of the required fields; no SDK wrapper |
 | `POST` | `/v1/validate/server` | `invoices.validateServer()` | Gateway-side validation with SDK checks, UBL generation status, and offline Peppol business rules |
 
 ### Events
@@ -218,8 +218,8 @@ import { webhooks } from "@getpeppr/sdk";
 
 const event = await webhooks.constructEvent(
   rawBody,                    // raw request body string
-  req.headers["getpeppr-signature"],
-  process.env.WEBHOOK_SECRET
+  String(req.headers["getpeppr-signature"] ?? ""),
+  process.env.WEBHOOK_SECRET!, // set in your environment
 );
 
 console.log(event.type); // e.g. "invoice.sent"
@@ -234,23 +234,29 @@ console.log(event.type); // e.g. "invoice.sent"
 | `invoice.registered` | Cleared by tax authority (e.g., KSA, PT) |
 | `invoice.received` | Receipt acknowledged by recipient |
 | `invoice.paid` | Payment confirmed by recipient |
-| `invoice.undeliverable` | Not deliverable — no receiving capability found for the recipient on the Peppol network (final state for the send; payload carries `status: "no_action"`) |
+| `invoice.undeliverable` | Not deliverable — no receiving capability found for the recipient on the Peppol network (final state for the send; payload carries `status: "no_action"`). Also sent when no delivery evidence has appeared after 7 days |
+| `invoice.delivery_unconfirmed` | No delivery evidence yet — not a failure; `invoice.sent` follows and supersedes it if delivery is confirmed later |
+| `invoice.partially_paid` | Recipient confirmed a partial payment |
+| `invoice.under_query` | Recipient raised a question about the invoice |
+| `invoice.conditionally_accepted` | Recipient accepted the invoice subject to conditions |
+| `invoice.status_changed` | Generic status notification with the full per-axis state — opt-in, never matched by `*` |
 | `legal_entity.registered` | Platform sub-tenant reached a verified or active state |
 | `legal_entity.verification_failed` | Platform sub-tenant registry verification failed |
+| `legal_entity.unsupported_scheme` | Platform sub-tenant identifier uses a scheme with no automatic validator |
 | `legal_entity.awaiting_authz` | Platform sub-tenant authorisation email is awaiting customer action |
 | `legal_entity.registration_failed` | Platform sub-tenant identity verified but network (SMP) registration failed |
 | `peppol_identifier.verified` | A Peppol identifier completed registry verification |
 | `peppol_identifier.verification_failed` | A Peppol identifier failed registry verification |
-| `inbound.invoice.received` | An invoice addressed to your Legal Entity was received from the Peppol network (pilot — contact support to enable) |
-| `inbound.creditnote.received` | A credit note addressed to your Legal Entity was received from the Peppol network (pilot — contact support to enable) |
+| `inbound.invoice.received` | An invoice addressed to your Legal Entity was received from the Peppol network |
+| `inbound.creditnote.received` | A credit note addressed to your Legal Entity was received from the Peppol network |
 | `test.ping` | Test event sent during endpoint setup |
-| `*` | Wildcard — subscribes to all event types |
+| `*` | Wildcard — subscribes to every event type except `invoice.status_changed`, which is opt-in |
 
 See the full [Webhooks guide](https://getpeppr.dev/docs/webhooks/) for payload shapes, the `Getpeppr-Signature` format, and retry behaviour.
 
-#### Inbound Reception (Pilot)
+#### Inbound Reception
 
-When a supplier on the Peppol network sends an invoice or credit note **to** one of your Legal Entities, getpeppr stores the document and dispatches an `inbound.invoice.received` or `inbound.creditnote.received` event. This is a pilot feature — contact [support@getpeppr.dev](mailto:support@getpeppr.dev) to enable it for your account.
+When a supplier on the Peppol network sends an invoice or credit note **to** one of your Legal Entities, getpeppr stores the document and dispatches an `inbound.invoice.received` or `inbound.creditnote.received` event. Every Legal Entity receives from the day it is registered, in sandbox and in production, with nothing to enable.
 
 > **Not to be confused with `invoice.received`** — that outbound event means a document _you sent_ was acknowledged by the recipient's access point. The `inbound.*` events mean a document was sent _to you_ by a third party.
 
@@ -274,10 +280,10 @@ Verify that a recipient is registered on the Peppol network before sending:
 
 ```typescript
 // Non-blocking mode — sends even if recipient not found (omit for no validation)
-const invoice = await peppol.invoices.send(data, { validateRecipient: "warn" });
+const warned = await peppol.invoices.send(data, { validateRecipient: "warn" });
 
 // Strict mode — rejects with 422 if recipient not found
-const invoice = await peppol.invoices.send(data, { validateRecipient: "strict" });
+const strict = await peppol.invoices.send(data, { validateRecipient: "strict" });
 ```
 
 Also available via the `x-validate-recipient` header in REST calls.
@@ -294,7 +300,7 @@ for await (const invoice of peppol.invoices.listAll()) {
 
 Also available on `contacts.listAll()`, `bankAccounts.listAll()`, and `events.listAll()`.
 
-> **Note:** `invoices.list()` returns outbound invoice submissions (invoices you sent). Inbound documents (invoices and credit notes sent _to_ you) are delivered through the `inbound.*` webhook events (pilot — contact support to enable) and can be read back from `GET /v1/received-documents` (see [Inbound Reception](#inbound-reception-pilot)). **The SDK does not wrap those endpoints yet** — call them over HTTP with your API key in the meantime.
+> **Note:** `invoices.list()` returns outbound invoice submissions (invoices you sent). Inbound documents (invoices and credit notes sent _to_ you) are delivered through the `inbound.*` webhook events and can be read back from `GET /v1/received-documents` (see [Inbound Reception](#inbound-reception)). **The SDK does not wrap those endpoints yet** — call them over HTTP with your API key in the meantime.
 
 ### Batch Send
 
@@ -326,4 +332,4 @@ const final = await peppol.invoices.waitFor(invoice.id, "accepted", {
 
 MIT — see [LICENSE](LICENSE).
 
-Built by [Zero Loop Labs](https://zerolooplabs.com).
+Built by Zero Loop Labs Ltd — [getpeppr.dev](https://getpeppr.dev).

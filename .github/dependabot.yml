@@ -7,7 +7,23 @@ updates:
     directory: "/"
     schedule:
       interval: monthly
+
   - package-ecosystem: npm
     directory: "/"
     schedule:
       interval: monthly
+    ignore:
+      # TypeScript 7 is a rewrite, and its compiler API changed shape:
+      # `ts.ScriptTarget` is undefined there, so `check:snippets` — the one check
+      # that drives the compiler through its API rather than the `tsc` command —
+      # fails on import. `check:examples` shells out to `npx tsc` and passes.
+      #
+      # Porting the snippet compiler would buy a documentation checker nothing,
+      # and an unmergeable pull request left standing turns CI red permanently,
+      # which is how a team learns to stop reading red. Minor and patch updates
+      # to TypeScript 5 still arrive.
+      #
+      # To revisit: port scripts/check-readme-snippets.mjs to the v7 API, then
+      # delete this block.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]

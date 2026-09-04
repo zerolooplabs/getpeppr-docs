@@ -65,7 +65,7 @@ function specOperations(yaml) {
 // ----------------------------------------------------------------- the mentions
 
 /** `{{base_url}}/v1/contacts/:id?x=1` and `https://api…/v1/invoices/inv_a1.` alike. */
-function normalise(raw) {
+function normalise(raw, literal = false) {
   let path = raw
     .replace(/^\{\{[^}]+\}\}/, "")
     .replace(/^https?:\/\/[^/]+/, "")
@@ -73,7 +73,7 @@ function normalise(raw) {
     // Prose punctuation, not path: a sentence ending in a URL, a URL in
     // parentheses, a backticked path. `.` is kept mid-path — `xml.ubl.invoice.bis3`
     // is a real format segment.
-    .replace(TRAILING_PUNCTUATION, "")
+    .replace(literal ? /$^/ : TRAILING_PUNCTUATION, "")
     .replace(/\/+$/, "");
   if (!path.startsWith("/v1/")) return null;
   path = path.slice(3); // spec paths are relative to the /v1 server URL
@@ -107,11 +107,18 @@ const OUR_HOST = /^https?:\/\/([a-z0-9-]+\.)*getpeppr\.[a-z]+(?:[/:?#]|$)/i;
 
 function mentionsIn(file, where) {
   const found = [];
-  const add = (raw, method, line) => {
+  // Things wrong with the mention itself, rather than with the route it names.
+  const misplaced = [];
+  // `literal` says the mention came from inside a backtick code span, where a
+  // trailing `!` or `.` is a character the author wrote, not sentence
+  // punctuation. Stripping it there would silently turn `/v1/validate/server!`
+  // — a route that does not exist — into one that does.
+  const add = (raw, method, line, literal = false) => {
     if (/^https?:\/\//.test(raw) && !OUR_HOST.test(raw)) return;
-    const path = normalise(raw);
+    const path = normalise(raw, literal);
     if (path) found.push({ path, method, where: `${where}:${line}` });
   };
+  const spanned = (line, index) => line[index - 1] === "`";
   const lines = readFileSync(file, "utf8").replace(/\r\n/g, "\n").split("\n");
 
   // A curl command may span continuation lines; its method is its `-X`,
@@ -132,30 +139,57 @@ function mentionsIn(file, where) {
     const method =
       new RegExp(`(?:--request|-X)[\\s=]*(${METHODS})`, "i").exec(command)?.[1]?.toUpperCase() ?? "GET";
     for (const m of command.matchAll(new RegExp(`(https?://[^\\s"']*)?(/v1/${PATH_CHARS})`, "g"))) {
-      if (m[1] && !OUR_HOST.test(m[1])) continue;
+      if (m[1] && !OUR_HOST.test(m[1])) {
+        // A published curl example that calls someone else's host is a defect,
+        // not noise to skip. In prose a foreign URL is legitimate; inside a
+        // command a reader is meant to paste, it is not.
+        misplaced.push({ what: `${m[1]}${m[2]} — a curl example must call the getpeppr API`, where: `${where}:${i + 1}` });
+        continue;
+      }
       curlMethod.set(`${i + 1}|${m[2]}`, method);
-      add(m[2], method, i + 1);
+      add(m[2], method, i + 1, true);
     }
   }
 
+  let inEndpointTable = false;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // A Markdown endpoint table row: | `GET` | `/v1/contacts/:id` | … |
-    // Every method/path pair on the row is taken, not just the first: a row can
+    // The Method cell of an ENDPOINT table: | `GET` | `/v1/contacts/:id` | … |
+    // Bounding the method name stops `BUDGET` from yielding GET, but leaving an
+    // unrecognised token unchecked would let an invalid method ship instead. So
+    // the cell is read — but only inside a table that declares itself an
+    // endpoint table with a `| Method | Endpoint |` header. Any other
+    // two-column table may legitimately hold a `/v1/…` in its second cell; this
+    // README has one listing the check commands.
+    const cells = /^\|([^|\n]*)\|([^|\n]*)\|/.exec(line);
+    if (cells) {
+      const first = cells[1].replace(/`/g, "").trim();
+      if (/^method$/i.test(first)) inEndpointTable = true;
+      else if (!/^:?-+:?$/.test(first)) {
+        const cited = new RegExp(`\`?(/v1/${PATH_CHARS})`).exec(cells[2])?.[1];
+        if (inEndpointTable && cited && first && !new RegExp(`^(?:${METHODS})$`).test(first)) {
+          misplaced.push({ what: `${first} ${cited} — "${first}" is not an HTTP method`, where: `${where}:${i + 1}` });
+        }
+      }
+    } else {
+      inEndpointTable = false; // a non-table line ends the table
+    }
+
+    // Every method/path pair on a table row, not just the first: a row can
     // document more than one, and stopping at the first is how a mention goes
     // uncounted.
     for (const m of line.matchAll(
-      // Word-bounded: without it `BUDGET` yields GET, `POSTMAN` POST and
-      // `DISPATCH` PATCH, inventing an operation the row never documented.
       new RegExp(`(?:^|[|\\s\`])(${METHODS})\\b\`?[^|\\n]*\\|[^|\\n]*?\`?(/v1/${PATH_CHARS})`, "g"),
     )) {
-      add(m[2], m[1], i + 1);
+      const at = m.index + m[0].lastIndexOf(m[2]);
+      add(m[2], m[1], i + 1, spanned(line, at));
     }
 
     // `METHOD /v1/…` or `METHOD` `/v1/…` in prose, backticks optional.
     for (const m of line.matchAll(new RegExp(`\\b(${METHODS})\`?[\\s]+\`?(/v1/${PATH_CHARS})`, "g"))) {
-      add(m[2], m[1], i + 1);
+      const at = m.index + m[0].lastIndexOf(m[2]);
+      add(m[2], m[1], i + 1, spanned(line, at));
     }
 
     // Any other `/v1/…`: an f-string in a Python example, a path in prose, a
@@ -164,22 +198,24 @@ function mentionsIn(file, where) {
     // skipped so it is not counted twice.
     if (consumed.has(i)) continue;
     for (const m of line.matchAll(new RegExp(`(/v1/${PATH_CHARS})`, "g"))) {
-      // A `/v1/…` under someone else's host documents their API, not this one.
-      // The curl pass above already skips those, but this pass would otherwise
-      // pick the same path up again stripped of the host that made it foreign.
-      const before = line.slice(0, m.index);
-      const host = /(https?:\/\/[^\s"'`]*)$/.exec(before)?.[1];
+      // A `/v1/…` under someone else's host, in PROSE, documents their API and
+      // is not ours to check. The curl pass above judges the same thing
+      // differently, on purpose.
+      const host = /(https?:\/\/[^\s"'`]*)$/.exec(line.slice(0, m.index))?.[1];
       if (host && !OUR_HOST.test(host)) continue;
       if (curlMethod.has(`${i + 1}|${m[1]}`)) continue;
-      add(m[1], null, i + 1);
+      add(m[1], null, i + 1, spanned(line, m.index));
     }
   }
-  return found;
+  return { found, misplaced };
 }
 
 const mentions = [];
+const misplaced = [];
 for (const file of findFiles(root, /\.(md|ts|py)$/)) {
-  mentions.push(...mentionsIn(file, rel(root, file)));
+  const found = mentionsIn(file, rel(root, file));
+  mentions.push(...found.found);
+  misplaced.push(...found.misplaced);
 }
 
 // The Postman collection is JSON, so parse it — it is the artefact integrators
@@ -299,9 +335,13 @@ const report = (title, map) => {
     for (const w of where) console.error(`    · mentioned in ${safe(w)}`);
   }
 };
+if (misplaced.length > 0) {
+  console.error(`  FAIL ${misplaced.length} mention(s) are malformed where they stand:\n`);
+  for (const m of misplaced) console.error(`  - ${safe(m.what)}\n    · ${safe(m.where)}`);
+}
 if (unknownPath.size > 0) report("mentioned path(s) are in no published route", unknownPath);
 if (unknownOperation.size > 0) report("mentioned operation(s) the spec does not declare", unknownOperation);
-if (unknownPath.size > 0 || unknownOperation.size > 0) {
+if (unknownPath.size > 0 || unknownOperation.size > 0 || misplaced.length > 0) {
   console.error(`\nSpec: ${SPEC_URL} (${operations.size} paths).`);
   process.exit(1);
 }

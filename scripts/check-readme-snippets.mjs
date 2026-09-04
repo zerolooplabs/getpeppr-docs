@@ -70,6 +70,29 @@ if (retagged.length > 0) {
   for (const r of retagged) console.error(`  - ${safe(r)} — use \`\`\`typescript`);
   process.exit(1);
 }
+
+// A ```js or ```javascript block is legitimate and is NOT compiled as
+// TypeScript — but it must still be valid JavaScript, or retagging a TypeScript
+// block to `javascript` would be a way to stop it being checked at all. Parsed
+// only, never run.
+const jsProblems = [];
+for (const file of findFiles(root, /\.md$/)) {
+  const at = rel(root, file);
+  for (const lang of ["js", "javascript"]) {
+    for (const block of fencedBlocks(file, lang)) {
+      if (!isProgram(block.code)) continue;
+      const source = ts.createSourceFile(`snippet.js`, block.code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS);
+      for (const d of source.parseDiagnostics ?? []) {
+        jsProblems.push(`${at}:${block.line} — ${ts.flattenDiagnosticMessageText(d.messageText, " ")}`);
+      }
+    }
+  }
+}
+if (jsProblems.length > 0) {
+  console.error("  FAIL a JavaScript block does not parse as JavaScript:");
+  for (const j of jsProblems) console.error(`  - ${safe(j)}`);
+  process.exit(1);
+}
 assertFound(fragments.length, 5, "TypeScript fragments in the Markdown files");
 
 // Compiled under node_modules/.cache: close enough to the repository that

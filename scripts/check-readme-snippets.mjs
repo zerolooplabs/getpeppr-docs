@@ -81,7 +81,12 @@ try {
   const preamble = join(dir, "zz-preamble.d.ts");
   writeFileSync(preamble, PREAMBLE);
   const canary = join(dir, "zz-canary.ts");
-  writeFileSync(canary, 'const _canary: import("@getpeppr/sdk").InvoiceInput = 1;\n');
+  // The canary must exercise what the FRAGMENTS depend on — the preamble's
+  // ambient declarations — not the SDK directly. A canary that imports
+  // @getpeppr/sdk itself keeps working while the preamble's own import is
+  // broken, which is precisely the case that turns every ambient type into
+  // `any` and every fragment above into a vacuous pass.
+  writeFileSync(canary, "const _canary: number = peppol;\n");
   const files = [];
   for (const [i, f] of fragments.entries()) {
     // Indexed: `a/b.md` and `a-b.md` both slugify to `a-b-md`, and the second

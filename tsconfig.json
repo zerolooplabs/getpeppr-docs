@@ -1,0 +1,15 @@
+{
+  "//": "Compiles examples/typescript/ the way an integrator would: strict, ESM, Node resolution, against the @getpeppr/sdk published on npm. `npm run check:examples`.",
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["examples/typescript/**/*.ts"]
+}

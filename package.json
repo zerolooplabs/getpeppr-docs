@@ -1,0 +1,28 @@
+{
+  "name": "getpeppr-docs-checks",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Toolchain that compiles or parses every published example in this repository. It never calls the getpeppr API and consumes no secret; its only network request is an anonymous GET of the public OpenAPI spec.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerolooplabs/getpeppr-docs.git"
+  },
+  "scripts": {
+    "check": "npm run check:examples && npm run check:snippets && npm run check:python && npm run check:shell && npm run check:postman && npm run check:routes",
+    "check:examples": "node scripts/check-examples.mjs",
+    "check:snippets": "node scripts/check-readme-snippets.mjs",
+    "check:python": "node scripts/check-python.mjs",
+    "check:shell": "node scripts/check-shell-blocks.mjs",
+    "check:postman": "node scripts/check-postman.mjs",
+    "check:routes": "node scripts/check-routes.mjs"
+  },
+  "devDependencies": {
+    "@getpeppr/sdk": "^5.0.0",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.0.0",
+    "express": "^5.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Toolchain that compiles and parses every published example in this repository. Runs entirely offline against the published SDK — it never calls the getpeppr API and consumes no secret.",
+  "description": "Toolchain that compiles or parses every published example in this repository. It never calls the getpeppr API and consumes no secret; its only network request is an anonymous GET of the public OpenAPI spec.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -11,7 +11,7 @@
   },
   "scripts": {
     "check": "npm run check:examples && npm run check:snippets && npm run check:python && npm run check:shell && npm run check:postman && npm run check:routes",
-    "check:examples": "tsc --noEmit",
+    "check:examples": "node scripts/check-examples.mjs",
     "check:snippets": "node scripts/check-readme-snippets.mjs",
     "check:python": "node scripts/check-python.mjs",
     "check:shell": "node scripts/check-shell-blocks.mjs",

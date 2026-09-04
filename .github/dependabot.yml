@@ -1,0 +1,13 @@
+# The CI workflow pins its actions to full commit SHAs, which is the only
+# immutable reference GitHub offers. Pinning without an update mechanism trades
+# a live risk for a stale one, so this opens the pull request that moves them.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: monthly

@@ -1,12 +1,13 @@
 /**
- * Compiles the TypeScript fragments published in README.md.
+ * Compiles the TypeScript fragments published in the Markdown files.
  *
- * The files under examples/typescript/ are whole programs and `tsc --noEmit`
- * covers them. The README blocks are fragments: they lean on identifiers the
+ * The files under examples/typescript/ are whole programs and `check:examples`
+ * covers them. These blocks are fragments: they lean on identifiers the
  * surrounding prose introduced (`peppol`, `rawBody`, `req`…). Those are declared
  * once in the preamble below, typed with the SDK's own types and never looser
  * than the SDK — a preamble that types something `any` would let the very
- * mistake this check exists to catch pass.
+ * mistake this check exists to catch pass. Diagnostics on the preamble itself
+ * fail the run, so it cannot decay into permissiveness unnoticed.
  *
  * Each fragment becomes its own module, so a `const invoice = …` inside a
  * fragment legally shadows the ambient `invoice`.
@@ -15,7 +16,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
-import { fencedBlocks, assertFound } from "./lib/markdown.mjs";
+import { fencedBlocks, assertFound, findFiles, rel } from "./lib/markdown.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -40,26 +41,29 @@ declare global {
 export {};
 `;
 
-// A shell line (`npm install …`) tagged as typescript is not a program. Skipped
-// by SHAPE, never by name, so a newly added fragment is compiled by default.
-const isProgram = (code) => !/^(?:npm|npx|getpeppr|curl|pip)\s/m.test(code.trim());
+// A shell line tagged as typescript is not a program. Anchored to the FIRST
+// line only: a legitimate fragment whose template literal happens to contain a
+// line starting with `curl ` must still be compiled, and a filter that silently
+// drops it would be this tool's own failure mode.
+const isProgram = (code) => !/^(?:npm|npx|getpeppr|curl|pip)\s/.test(code.trim());
 
-const sources = ["README.md"];
 const fragments = [];
-for (const file of sources) {
-  for (const block of fencedBlocks(join(root, file), "typescript")) {
-    if (isProgram(block.code)) fragments.push({ ...block, file });
+for (const file of findFiles(root, /\.md$/)) {
+  for (const block of fencedBlocks(file, "typescript")) {
+    if (isProgram(block.code)) fragments.push({ ...block, file: rel(root, file) });
   }
 }
-assertFound(fragments.length, 5, "TypeScript fragments in the READMEs");
+assertFound(fragments.length, 5, "TypeScript fragments in the Markdown files");
 
-// Compiled inside the repository so `@getpeppr/sdk`, `@types/node` and the
-// root package.json's `"type": "module"` all resolve exactly as they do for the
+// Compiled inside the repository so `@getpeppr/sdk`, `@types/node` and the root
+// package.json's `"type": "module"` all resolve exactly as they do for the
 // example files — no `paths` mapping that could drift from reality.
 const dir = mkdtempSync(join(root, ".snippets-check-"));
+let failures = [];
 try {
+  const preamble = join(dir, "zz-preamble.d.ts");
+  writeFileSync(preamble, PREAMBLE);
   const files = [];
-  writeFileSync(join(dir, "zz-preamble.d.ts"), PREAMBLE);
   for (const f of fragments) {
     const name = `${f.file.replace(/[^a-z0-9]+/gi, "-")}-L${f.line}.ts`;
     const path = join(dir, name);
@@ -78,7 +82,7 @@ try {
     skipLibCheck: true,
     types: ["node"],
   };
-  const program = ts.createProgram([join(dir, "zz-preamble.d.ts"), ...files.map((f) => f.path)], options);
+  const program = ts.createProgram([preamble, ...files.map((f) => f.path)], options);
 
   const byFile = new Map();
   for (const d of ts.getPreEmitDiagnostics(program)) {
@@ -86,26 +90,34 @@ try {
     if (!byFile.has(key)) byFile.set(key, []);
     byFile.get(key).push(`TS${d.code}: ${ts.flattenDiagnosticMessageText(d.messageText, "\n")}`);
   }
+  const errorsFor = (path) => byFile.get(path.replace(/\\/g, "/")) ?? byFile.get(path) ?? [];
 
-  let failed = 0;
   for (const { label, path } of files) {
-    const errors = byFile.get(path.replace(/\\/g, "/")) ?? byFile.get(path) ?? [];
+    const errors = errorsFor(path);
     if (errors.length === 0) {
       console.log(`  ok   ${label}`);
     } else {
-      failed++;
+      failures.push(label);
       console.error(`  FAIL ${label}`);
-      for (const e of errors) console.error(`         ${e}`);
+      for (const e of errors) console.error(`  - ${e}`);
     }
   }
-  const global = byFile.get("(global)") ?? [];
-  for (const e of global) console.error(`  FAIL (global)  ${e}`);
-
-  if (failed > 0 || global.length > 0) {
-    console.error(`\n${failed} of ${files.length} README fragments do not compile against @getpeppr/sdk.`);
-    process.exit(1);
+  // `skipLibCheck` plus per-fragment reporting would otherwise let a broken
+  // import in the preamble degrade every ambient type to `any` in silence.
+  for (const e of [...errorsFor(preamble), ...(byFile.get("(global)") ?? [])]) {
+    failures.push("preamble");
+    console.error(`  FAIL preamble — ${e}`);
   }
-  console.log(`\n${files.length} README fragments compile against @getpeppr/sdk.`);
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
+
+// Outside the try/finally: `process.exit` does not unwind the stack, so an exit
+// inside it would skip the cleanup above and leave a directory of stray .ts
+// files in the repository — which `check:routes` would then read as published
+// content.
+if (failures.length > 0) {
+  console.error(`\n${failures.length} of ${fragments.length} Markdown fragments do not compile against @getpeppr/sdk.`);
+  process.exit(1);
+}
+console.log(`\n${fragments.length} Markdown fragments compile against @getpeppr/sdk.`);

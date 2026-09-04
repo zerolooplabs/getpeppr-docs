@@ -1,4 +1,4 @@
-"""Export a sent invoice as PDF, UBL XML, or JSON."""
+"""Export a sent invoice as PDF or UBL XML."""
 
 import requests
 
@@ -11,6 +11,9 @@ invoice_id = "inv_abc123"
 
 
 # -- Export as PDF ------------------------------------------------------------
+# /as/pdf returns the PDF only when the provider produced one. Otherwise it
+# responds 200 with the original UBL XML — check the Content-Type before
+# naming the file, or you will save XML with a .pdf extension.
 
 response = requests.get(
     f"{BASE_URL}/v1/invoices/{invoice_id}/as/pdf",
@@ -19,9 +22,14 @@ response = requests.get(
 )
 response.raise_for_status()
 
-with open("invoice.pdf", "wb") as f:
-    f.write(response.content)
-print("Saved invoice.pdf")
+if response.headers.get("Content-Type", "").startswith("application/pdf"):
+    with open("invoice.pdf", "wb") as f:
+        f.write(response.content)
+    print("Saved invoice.pdf")
+else:
+    with open("invoice-original.xml", "w") as f:
+        f.write(response.text)
+    print("No PDF yet — saved the UBL XML as invoice-original.xml instead")
 
 
 # -- Export as UBL XML (BIS 3.0) ---------------------------------------------
@@ -38,7 +46,9 @@ with open("invoice.xml", "w") as f:
 print("Saved invoice.xml")
 
 
-# -- Export as JSON -----------------------------------------------------------
+# -- Export the document as transmitted (UBL XML, SBDH envelope included) ------
+# There is no JSON export: what left for the network is XML. The REST API also
+# serves /as/payload — the same document without the SBDH envelope.
 
 response = requests.get(
     f"{BASE_URL}/v1/invoices/{invoice_id}/as/original",
@@ -47,6 +57,6 @@ response = requests.get(
 )
 response.raise_for_status()
 
-with open("invoice.json", "w") as f:
+with open("invoice-transmitted.xml", "w") as f:
     f.write(response.text)
-print("Saved invoice.json")
+print("Saved invoice-transmitted.xml")

@@ -130,7 +130,7 @@ Import the collection into Postman for interactive API exploration.
 Send an invoice, track its delivery, and export it:
 
 ```
-send → track status → export (PDF, XML, JSON)
+send → track status → export (PDF, XML)
 ```
 
 | Method | Endpoint | SDK Method | Description |

@@ -22,7 +22,11 @@ def verify_signature(raw_body: bytes, signature_header: str, secret: str) -> boo
     if not signature_header:
         return False
 
-    parts = dict(pair.split("=", 1) for pair in signature_header.split(","))
+    try:
+        parts = dict(pair.split("=", 1) for pair in signature_header.split(","))
+    except ValueError:
+        # A malformed header (a pair without "=") must reject, not raise.
+        return False
     timestamp = parts.get("t", "")
     received_sig = parts.get("s", "")
 

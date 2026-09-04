@@ -77,6 +77,9 @@ for _ in range(20):  # poll up to 20 times (60 seconds)
 
 
 # -- Step 3: Export as PDF -------------------------------------------------------
+# /as/pdf returns the PDF only when the provider produced one — otherwise the
+# original UBL XML comes back with a 200. Check the Content-Type before naming
+# the file, or you will save XML with a .pdf extension.
 
 response = requests.get(
     f"{BASE_URL}/v1/invoices/{invoice_id}/as/pdf",
@@ -85,6 +88,11 @@ response = requests.get(
 )
 response.raise_for_status()
 
-with open("INV-2026-100.pdf", "wb") as f:
-    f.write(response.content)
-print(f"PDF saved ({len(response.content)} bytes)")
+if response.headers.get("Content-Type", "").startswith("application/pdf"):
+    with open("INV-2026-100.pdf", "wb") as f:
+        f.write(response.content)
+    print(f"PDF saved ({len(response.content)} bytes)")
+else:
+    with open("INV-2026-100-original.xml", "w") as f:
+        f.write(response.text)
+    print("No PDF yet — saved the UBL XML as INV-2026-100-original.xml instead")

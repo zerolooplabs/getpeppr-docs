@@ -55,7 +55,17 @@ const final = await peppol.invoices.waitFor(result.id, "delivered", {
 console.log(`Final status: ${final.status}`);
 
 // -- Step 3: Export as PDF ------------------------------------------------------
+// /as/pdf returns the PDF only when the provider produced one — otherwise the
+// original UBL XML comes back instead. The SDK hands you raw bytes without the
+// Content-Type header, so check the leading "%PDF-" marker before naming the
+// file, or you will save XML with a .pdf extension.
 
 const pdfBuffer = await peppol.invoices.getAs(result.id, "pdf");
-writeFileSync("INV-2026-100.pdf", Buffer.from(pdfBuffer));
-console.log(`PDF saved (${pdfBuffer.byteLength} bytes)`);
+const pdfBytes = Buffer.from(pdfBuffer);
+if (pdfBytes.subarray(0, 5).toString("latin1") === "%PDF-") {
+  writeFileSync("INV-2026-100.pdf", pdfBytes);
+  console.log(`PDF saved (${pdfBytes.byteLength} bytes)`);
+} else {
+  writeFileSync("INV-2026-100-original.xml", pdfBytes);
+  console.log("No PDF yet — saved the UBL XML as INV-2026-100-original.xml instead");
+}

@@ -268,9 +268,11 @@ for (const group of byPlace.values()) {
 }
 
 const distinctPaths = new Set(mentions.map((m) => m.path));
-// 120 occurrences today: 90 across the Markdown, Python and TypeScript files,
-// 30 Postman requests. The floor leaves room for a legitimate edit and none for
-// a surface going quiet.
+// 120 route mentions today, from 122 physical `/v1/` occurrences: 92 across the
+// Markdown, Python and TypeScript files plus 30 Postman requests, less the two
+// in this README's own prose that read `/v1/…` with an ellipsis and name no
+// route. The floor leaves room for a legitimate edit and none for a surface
+// going quiet.
 assertFound(mentions.length, 110, "API path mentions");
 // Counting mentions alone would let half the distinct routes disappear while
 // the total stayed high. Both are asserted.

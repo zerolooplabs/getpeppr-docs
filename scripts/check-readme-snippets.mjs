@@ -81,6 +81,16 @@ for (const file of findFiles(root, /\.md$/)) {
   for (const lang of ["js", "javascript"]) {
     for (const block of fencedBlocks(file, lang)) {
       if (!isProgram(block.code)) continue;
+      // A block that uses our SDK is one of our examples, and belongs in
+      // ```typescript where it gets compiled. Syntax alone cannot tell: most of
+      // these fragments are valid JavaScript too, so retagging one to
+      // ```javascript would take it out of the type check while still parsing
+      // cleanly — and the fragment count would drop by exactly one, which the
+      // anti-vacuity floor reads as a legitimate edit.
+      if (/@getpeppr\/sdk|\bpeppol\.|\bwebhooks\./.test(block.code)) {
+        jsProblems.push(`${at}:${block.line} — uses the getpeppr SDK, so it must be tagged \`\`\`typescript to be compiled`);
+        continue;
+      }
       const source = ts.createSourceFile(`snippet.js`, block.code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.JS);
       for (const d of source.parseDiagnostics ?? []) {
         jsProblems.push(`${at}:${block.line} — ${ts.flattenDiagnosticMessageText(d.messageText, " ")}`);
@@ -89,7 +99,7 @@ for (const file of findFiles(root, /\.md$/)) {
   }
 }
 if (jsProblems.length > 0) {
-  console.error("  FAIL a JavaScript block does not parse as JavaScript:");
+  console.error("  FAIL a block tagged as JavaScript is not usable as published:");
   for (const j of jsProblems) console.error(`  - ${safe(j)}`);
   process.exit(1);
 }

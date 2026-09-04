@@ -42,7 +42,7 @@ jobs:
       # the runner without any change to this repository. Dependabot
       # (.github/dependabot.yml) opens the pull request that moves them, so
       # pinning does not trade a live risk for a stale one.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Nothing here talks to GitHub after checkout, so the automatic token
           # has no reason to stay in the runner's git config.

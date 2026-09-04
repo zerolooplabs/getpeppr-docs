@@ -1,6 +1,19 @@
 import { readFileSync, readdirSync, lstatSync } from "node:fs";
 import { join, relative } from "node:path";
 
+/**
+ * Makes a value read from repository content safe to print in CI.
+ *
+ * A pull request can put anything in a Postman request name, a Markdown line or
+ * a FILE NAME — git stores newlines in paths — and GitHub Actions reads a line
+ * beginning (after optional whitespace) with `::` as a workflow command:
+ * `::error::`, `::add-mask::`. Collapsing newlines means such a value can never
+ * begin a line; every call site also prints a non-whitespace character before
+ * it, so it can never be the first thing on one either.
+ */
+export const safe = (value) => String(value).replace(/[\r\n\t]+/g, " ").slice(0, 300);
+
+
 const SKIP_DIRS = new Set(["node_modules", ".git", "__pycache__"]);
 
 /**
@@ -73,7 +86,7 @@ export function fencedBlocks(file, lang) {
     open.body.push(line);
   }
   if (open !== null) {
-    throw new Error(`${file}: unterminated \`\`\`${lang} block opened at line ${open.line - 1}`);
+    throw new Error(`${safe(file)}: unterminated \`\`\`${lang} block opened at line ${open.line - 1}`);
   }
   return blocks;
 }
@@ -115,17 +128,6 @@ export function assertFound(count, minimum, what) {
   }
 }
 
-/**
- * Makes a value read from repository content safe to print in CI.
- *
- * A pull request can put anything in a Postman request name, a Markdown line or
- * a FILE NAME — git stores newlines in paths — and GitHub Actions reads a line
- * beginning (after optional whitespace) with `::` as a workflow command:
- * `::error::`, `::add-mask::`. Collapsing newlines means such a value can never
- * begin a line; every call site also prints a non-whitespace character before
- * it, so it can never be the first thing on one either.
- */
-export const safe = (value) => String(value).replace(/[\r\n\t]+/g, " ").slice(0, 300);
 
 /** Repository-relative path, made safe to print. */
 export const rel = (root, file) => safe(relative(root, file) || file);

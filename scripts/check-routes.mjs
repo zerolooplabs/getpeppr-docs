@@ -73,7 +73,7 @@ function normalise(raw) {
     // Prose punctuation, not path: a sentence ending in a URL, a URL in
     // parentheses, a backticked path. `.` is kept mid-path — `xml.ubl.invoice.bis3`
     // is a real format segment.
-    .replace(/[.,;:)\]`'"]+$/, "")
+    .replace(TRAILING_PUNCTUATION, "")
     .replace(/\/+$/, "");
   if (!path.startsWith("/v1/")) return null;
   path = path.slice(3); // spec paths are relative to the /v1 server URL
@@ -93,10 +93,17 @@ function normalise(raw) {
 // to exist. `/v1/health+admin` truncated to `/health` is an approval of the
 // wrong route.
 const PATH_CHARS = "[A-Za-z0-9/_:{}.*$+%~@()!,;'-]*";
+// Trailing prose punctuation, stripped AFTER capture rather than excluded from
+// it: excluding a character would truncate `/v1/health+admin` into `/health`,
+// which exists — an approval of the wrong route. `.` is kept mid-path because
+// `xml.ubl.invoice.bis3` is a real format segment.
+const TRAILING_PUNCTUATION = /[.,;:!?)\]`'"]+$/;
 const METHODS = "GET|POST|PUT|PATCH|DELETE";
 // Absolute URLs are only ours. A `/v1/…` under someone else's host documents
 // their API, not this one.
-const OUR_HOST = /^https?:\/\/[a-z0-9.-]*getpeppr\.[a-z]+/i;
+// Label-anchored: `evilgetpeppr.dev` is not ours, and a substring match said it
+// was.
+const OUR_HOST = /^https?:\/\/([a-z0-9-]+\.)*getpeppr\.[a-z]+(?:[/:?#]|$)/i;
 
 function mentionsIn(file, where) {
   const found = [];
@@ -139,7 +146,9 @@ function mentionsIn(file, where) {
     // document more than one, and stopping at the first is how a mention goes
     // uncounted.
     for (const m of line.matchAll(
-      new RegExp(`\`?(${METHODS})\`?[^|\\n]*\\|[^|\\n]*?\`?(/v1/${PATH_CHARS})`, "g"),
+      // Word-bounded: without it `BUDGET` yields GET, `POSTMAN` POST and
+      // `DISPATCH` PATCH, inventing an operation the row never documented.
+      new RegExp(`(?:^|[|\\s\`])(${METHODS})\\b\`?[^|\\n]*\\|[^|\\n]*?\`?(/v1/${PATH_CHARS})`, "g"),
     )) {
       add(m[2], m[1], i + 1);
     }
@@ -155,6 +164,12 @@ function mentionsIn(file, where) {
     // skipped so it is not counted twice.
     if (consumed.has(i)) continue;
     for (const m of line.matchAll(new RegExp(`(/v1/${PATH_CHARS})`, "g"))) {
+      // A `/v1/…` under someone else's host documents their API, not this one.
+      // The curl pass above already skips those, but this pass would otherwise
+      // pick the same path up again stripped of the host that made it foreign.
+      const before = line.slice(0, m.index);
+      const host = /(https?:\/\/[^\s"'`]*)$/.exec(before)?.[1];
+      if (host && !OUR_HOST.test(host)) continue;
       if (curlMethod.has(`${i + 1}|${m[1]}`)) continue;
       add(m[1], null, i + 1);
     }
@@ -194,8 +209,33 @@ const unique = mentions.filter((m) => {
 mentions.length = 0;
 mentions.push(...unique);
 
+// One occurrence, one record. Several extractors legitimately see the same path
+// on the same line — one knowing the method, the bare pass not — and keying on
+// the method would keep both, so the count would describe records rather than
+// occurrences and could not serve as an anti-vacuity floor.
+//
+// But a line can genuinely carry the same path under two methods:
+// examples/curl/README.md documents `PUT /v1/transports/:code` and
+// `DELETE /v1/transports/:code` on one line. Those are two operations. So the
+// bare record is dropped only when a method was found for that same path and
+// place; distinct methods all survive.
+const byPlace = new Map();
+for (const m of mentions) {
+  const key = `${m.path} ${m.where}`;
+  if (!byPlace.has(key)) byPlace.set(key, new Map());
+  byPlace.get(key).set(m.method ?? null, m);
+}
+mentions.length = 0;
+for (const group of byPlace.values()) {
+  const methoded = [...group.values()].filter((m) => m.method);
+  mentions.push(...(methoded.length > 0 ? methoded : [...group.values()]));
+}
+
 const distinctPaths = new Set(mentions.map((m) => m.path));
-assertFound(mentions.length, 120, "API path mentions");
+// 120 occurrences today: 90 across the Markdown, Python and TypeScript files,
+// 30 Postman requests. The floor leaves room for a legitimate edit and none for
+// a surface going quiet.
+assertFound(mentions.length, 110, "API path mentions");
 // Counting mentions alone would let half the distinct routes disappear while
 // the total stayed high. Both are asserted.
 assertFound(distinctPaths.size, 35, "distinct API paths mentioned");

@@ -50,7 +50,10 @@ const isProgram = (code) => !/^(?:npm|npx|getpeppr|curl|pip)\s/.test(code.trim()
 // A block retagged from ```typescript to ```ts stops being compiled and takes
 // the count one below the floor, which a minimum alone reads as a legitimate
 // edit. Refusing the ALIAS catches the cause instead of counting the survivors.
-const ALIASES = new Set(["ts", "tsx", "typescript-jsx", "javascript", "js"]);
+// Only aliases that MEAN TypeScript. ```js and ```javascript are legitimate
+// blocks that were never meant to be compiled as TypeScript; refusing them
+// would be a false red on correct content.
+const ALIASES = new Set(["ts", "tsx"]);
 const fragments = [];
 const retagged = [];
 for (const file of findFiles(root, /\.md$/)) {

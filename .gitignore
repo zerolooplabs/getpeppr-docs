@@ -1,6 +1,3 @@
 __pycache__/
 *.pyc
 node_modules/
-
-# Temporary directory the README snippet compiler writes into.
-.snippets-check-*/

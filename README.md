@@ -328,6 +328,35 @@ const final = await peppol.invoices.waitFor(invoice.id, "accepted", {
 
 ---
 
+## Verifying these examples
+
+Every example in this repository is compiled or parsed on every push
+([CI](.github/workflows/ci.yml)). Nothing here is written by hand and hoped for:
+the TypeScript compiles against the `@getpeppr/sdk` published on npm, and every
+API path cited anywhere — examples, READMEs, Postman collection — is checked
+against the [OpenAPI spec](https://getpeppr.dev/openapi.yaml) getpeppr publishes.
+
+To run the same checks locally:
+
+```bash
+npm ci
+npm run check
+```
+
+| Command | What it proves |
+| --- | --- |
+| `npm run check:examples` | `examples/typescript/` compiles with `strict` against `@getpeppr/sdk` |
+| `npm run check:snippets` | the TypeScript fragments in this README compile too |
+| `npm run check:python` | `examples/python/` is syntactically valid (`py_compile`) |
+| `npm run check:shell` | every `bash` block in the READMEs parses (`bash -n`) |
+| `npm run check:postman` | the Postman collection imports, and every request has a method and a URL |
+| `npm run check:routes` | every cited `/v1/…` path exists in the published OpenAPI spec |
+
+No check calls the getpeppr API, and none needs a key: they parse and type-check,
+they never execute. The only network request is an anonymous `GET` of the public
+OpenAPI spec, and `check:routes` skips with a warning rather than failing if that
+request does not answer.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

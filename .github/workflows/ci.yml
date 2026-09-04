@@ -1,0 +1,66 @@
+# Every example published here is compiled or parsed on every push.
+#
+# This repository is public and linked from the header and footer of every page
+# on getpeppr.dev: an integrator copies these files verbatim. Before this
+# workflow existed, nothing compiled them — GPR-1261 found 33 defect sites,
+# including a route that had been removed and stayed cited twelve times.
+#
+# No secret is used and no getpeppr API call is made. `tsc --noEmit`, `bash -n`
+# and `py_compile` all parse without executing, and the only network request is
+# an anonymous GET of the OpenAPI spec published on the public site.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Route citations can go stale without anyone touching this repository: the
+  # spec changes on the other side. A weekly run catches that drift.
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  examples:
+    name: Examples compile and parse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: npm ci
+
+      # Each check is its own step so a red run names the surface that broke
+      # without anyone opening the log.
+      - name: TypeScript examples compile against @getpeppr/sdk
+        run: npm run check:examples
+
+      - name: README TypeScript fragments compile
+        run: npm run check:snippets
+
+      - name: Python examples compile
+        run: npm run check:python
+
+      - name: Shell blocks parse
+        run: npm run check:shell
+
+      - name: Postman collection is importable
+        run: npm run check:postman
+
+      - name: Every cited API path exists in the published spec
+        run: npm run check:routes

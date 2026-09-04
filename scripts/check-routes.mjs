@@ -118,7 +118,12 @@ function mentionsIn(file, where) {
     const path = normalise(raw, literal);
     if (path) found.push({ path, method, where: `${where}:${line}` });
   };
-  const spanned = (line, index) => line[index - 1] === "`";
+  // Inside a backtick code span, judged by the PARITY of the backticks before
+  // the position — not by the neighbouring character. In `` `GET /v1/…` `` the
+  // character immediately before the path is a space, and reading only that
+  // made a genuinely wrong `` `GET /v1/received-documents!` `` pass as prose
+  // whose `!` could be stripped.
+  const spanned = (line, index) => (line.slice(0, index).match(/`/g)?.length ?? 0) % 2 === 1;
   const lines = readFileSync(file, "utf8").replace(/\r\n/g, "\n").split("\n");
 
   // A curl command may span continuation lines; its method is its `-X`,

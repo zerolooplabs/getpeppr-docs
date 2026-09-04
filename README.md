@@ -333,10 +333,10 @@ const final = await peppol.invoices.waitFor(invoice.id, "accepted", {
 Every example in this repository is compiled or parsed on every pull request and
 on every push to `main` ([CI](.github/workflows/ci.yml)).
 
-Every `/v1/…` path this repository mentions — the endpoint tables above, the
-prose, the Python and TypeScript examples, the curl blocks and the Postman
-collection — is checked against the [OpenAPI spec](https://getpeppr.dev/openapi.yaml)
-getpeppr publishes. Where a mention also states its HTTP method — a table row, a
+Every `/v1/…` path mentioned in the published content — the endpoint tables
+above, the prose, the Python and TypeScript examples, the curl blocks and the
+Postman collection — is checked against the
+[OpenAPI spec](https://getpeppr.dev/openapi.yaml) getpeppr publishes. Where a mention also states its HTTP method — a table row, a
 `curl -X`, a Postman request — the method is checked against the spec too; a bare
 path is checked for existence only.
 
@@ -353,7 +353,7 @@ npm run check
 | `npm run check:snippets` | the TypeScript fragments in this README compile too |
 | `npm run check:python` | `examples/python/` is syntactically valid (`py_compile`) |
 | `npm run check:shell` | every `bash` block in the Markdown files parses (`bash -n`) |
-| `npm run check:postman` | the Postman collection is valid Collection v2.1 JSON, every request has a method and a URL, and none carries a script |
+| `npm run check:postman` | the Postman collection parses, declares the Collection v2.1 schema, every request has a method and a URL, and nothing in it carries a script |
 | `npm run check:routes` | every mentioned `/v1/…` path exists in the published OpenAPI spec, and its method too wherever the mention states one |
 
 Each sweep also asserts a minimum count, so a check that finds nothing left to
@@ -368,10 +368,12 @@ JSON, a `curl` flag that does not exist. `check:routes` covers the URLs and thei
 methods; the field-level half is uncovered, and finding it still takes a human
 reading the examples against the API.
 
-No check calls the getpeppr API, and none needs a key. The only network request
-is an anonymous `GET` of the public OpenAPI spec; `check:routes` fails if that
-URL answers `4xx` — the spec is not where we say it is — and skips with a warning
-on a timeout or a `5xx`, which is the upstream's problem and has its own monitor.
+No check calls the getpeppr API, and none needs a key. Between them the checks
+make one network request, an anonymous `GET` of the public OpenAPI spec —
+`check:routes` fails if that URL answers `4xx`, because then the spec is not
+where we say it is, and skips with a warning on a timeout or a `5xx`, which is
+the upstream's problem and has its own monitor. (Installing the toolchain, of
+course, reaches npm.)
 
 ## License
 

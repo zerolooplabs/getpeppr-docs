@@ -87,51 +87,75 @@ function normalise(raw) {
   return path.replace(/^\/directory\/([^/:]+):([^/]+)$/, "/directory/$1/$2");
 }
 
-const PATH_CHARS = "[A-Za-z0-9/_:{}.*-]*";
+// Deliberately wide: a mention containing a character a real path may not have
+// (`+`, `%`, `~`, `@`, a `${…}` interpolation) must be CAPTURED and then fail as
+// unknown, never truncated at that character into a shorter path that happens
+// to exist. `/v1/health+admin` truncated to `/health` is an approval of the
+// wrong route.
+const PATH_CHARS = "[A-Za-z0-9/_:{}.*$+%~@()!,;'-]*";
 const METHODS = "GET|POST|PUT|PATCH|DELETE";
+// Absolute URLs are only ours. A `/v1/…` under someone else's host documents
+// their API, not this one.
+const OUR_HOST = /^https?:\/\/[a-z0-9.-]*getpeppr\.[a-z]+/i;
 
 function mentionsIn(file, where) {
   const found = [];
   const add = (raw, method, line) => {
+    if (/^https?:\/\//.test(raw) && !OUR_HOST.test(raw)) return;
     const path = normalise(raw);
     if (path) found.push({ path, method, where: `${where}:${line}` });
   };
   const lines = readFileSync(file, "utf8").replace(/\r\n/g, "\n").split("\n");
 
+  // A curl command may span continuation lines; its method is its `-X`,
+  // `-XDELETE` or `--request`, defaulting to GET. Continuation lines are
+  // recorded so the bare pass below does not count their URLs a second time
+  // without the method.
+  const curlMethod = new Map();
+  const consumed = new Set();
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
-
-    // 1. A Markdown endpoint table row: | `GET` | `/v1/contacts/:id` | … |
-    //    The method and the path are in different cells, so no whitespace
-    //    separates them — the form that made the README's four endpoint tables
-    //    invisible to the first version of this check.
-    const row = new RegExp(`^\\|[^|\\n]*\`(${METHODS})\`[^|\\n]*\\|\\s*\`?(/v1/[^\`|\\s]*)`).exec(line);
-    if (row) {
-      add(row[2], row[1], i + 1);
-      continue;
+    // `curl` must start a command, not merely appear in a sentence.
+    if (!/(?:^|[|&;$(]\s*)curl(?:\s|$)/.test(lines[i])) continue;
+    let command = lines[i];
+    let j = i;
+    while (/\\\s*$/.test(lines[j]) && j + 1 < lines.length) {
+      command += " " + lines[++j];
+      consumed.add(j);
     }
-
-    // 2. A curl command: its method is its -X, defaulting to GET. Continuation
-    //    lines are joined so the -X of a multi-line command is not lost.
-    if (/(^|\s)curl(\s|$)/.test(line)) {
-      let command = line;
-      let j = i;
-      while (/\\\s*$/.test(lines[j]) && j + 1 < lines.length) command += " " + lines[++j];
-      const method = new RegExp(`-X\\s+(${METHODS})`).exec(command)?.[1] ?? "GET";
-      for (const m of command.matchAll(new RegExp(`(?:https?://[^\\s"']*)?(/v1/${PATH_CHARS})`, "g"))) {
-        add(m[1], method, i + 1);
-      }
-      continue;
+    const method =
+      new RegExp(`(?:--request|-X)[\\s=]*(${METHODS})`, "i").exec(command)?.[1]?.toUpperCase() ?? "GET";
+    for (const m of command.matchAll(new RegExp(`(https?://[^\\s"']*)?(/v1/${PATH_CHARS})`, "g"))) {
+      if (m[1] && !OUR_HOST.test(m[1])) continue;
+      curlMethod.set(`${i + 1}|${m[2]}`, method);
+      add(m[2], method, i + 1);
     }
+  }
 
-    // 3. `METHOD /v1/…` in prose.
-    for (const m of line.matchAll(new RegExp(`\\b(${METHODS})\\s+\`?(/v1/${PATH_CHARS})`, "g"))) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // A Markdown endpoint table row: | `GET` | `/v1/contacts/:id` | … |
+    // Every method/path pair on the row is taken, not just the first: a row can
+    // document more than one, and stopping at the first is how a mention goes
+    // uncounted.
+    for (const m of line.matchAll(
+      new RegExp(`\`?(${METHODS})\`?[^|\\n]*\\|[^|\\n]*?\`?(/v1/${PATH_CHARS})`, "g"),
+    )) {
       add(m[2], m[1], i + 1);
     }
 
-    // 4. Any other `/v1/…`: an f-string in a Python example, a path in prose, a
-    //    string in TypeScript. Method unknown, so path existence only.
+    // `METHOD /v1/…` or `METHOD` `/v1/…` in prose, backticks optional.
+    for (const m of line.matchAll(new RegExp(`\\b(${METHODS})\`?[\\s]+\`?(/v1/${PATH_CHARS})`, "g"))) {
+      add(m[2], m[1], i + 1);
+    }
+
+    // Any other `/v1/…`: an f-string in a Python example, a path in prose, a
+    // string in TypeScript. Method unknown, so path existence only. A curl URL
+    // already taken above, or a continuation line already folded into one, is
+    // skipped so it is not counted twice.
+    if (consumed.has(i)) continue;
     for (const m of line.matchAll(new RegExp(`(/v1/${PATH_CHARS})`, "g"))) {
+      if (curlMethod.has(`${i + 1}|${m[1]}`)) continue;
       add(m[1], null, i + 1);
     }
   }
@@ -157,6 +181,18 @@ const collection = JSON.parse(readFileSync(join(root, POSTMAN), "utf8"));
     }
   }
 })(collection.item, []);
+
+// Two extractors can legitimately see the same thing on the same line. Counting
+// it twice would inflate every number this check reports.
+const seen = new Set();
+const unique = mentions.filter((m) => {
+  const key = `${m.method ?? "-"} ${m.path} ${m.where}`;
+  if (seen.has(key)) return false;
+  seen.add(key);
+  return true;
+});
+mentions.length = 0;
+mentions.push(...unique);
 
 const distinctPaths = new Set(mentions.map((m) => m.path));
 assertFound(mentions.length, 120, "API path mentions");

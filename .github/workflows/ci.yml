@@ -4,14 +4,15 @@
 # This repository is public and linked from every page on getpeppr.dev: an
 # integrator copies these files verbatim. They had never been checked
 # AUTOMATICALLY — the GPR-1261 audit did read and run them, once, by hand, and
-# found 33 defect sites including a route that had been removed from the API and
-# stayed published across twelve of them. A one-off audit does not survive the
-# next commit; this does.
+# recorded 33 defect sites, among them a route removed from the API that was
+# still published in 16 places across 8 files. A one-off audit does not survive
+# the next commit; this does.
 #
 # No secret is used and no getpeppr API call is made. `tsc --noEmit`, `bash -n`
-# and `py_compile` all parse without executing, `npm ci --ignore-scripts` runs no
-# package lifecycle script, and the only network request is an anonymous GET of
-# the OpenAPI spec published on the public site.
+# and `py_compile` all parse without executing, and `npm ci --ignore-scripts`
+# runs no package lifecycle script. The job does reach the network to install
+# from npm and to restore the setup-node cache; the CHECKS themselves make one
+# request between them, an anonymous GET of the public OpenAPI spec.
 name: CI
 
 on:
@@ -41,7 +42,7 @@ jobs:
       # the runner without any change to this repository. Dependabot
       # (.github/dependabot.yml) opens the pull request that moves them, so
       # pinning does not trade a live risk for a stale one.
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           # Nothing here talks to GitHub after checkout, so the automatic token
           # has no reason to stay in the runner's git config.

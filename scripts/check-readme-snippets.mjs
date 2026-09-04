@@ -12,11 +12,11 @@
  * Each fragment becomes its own module, so a `const invoice = …` inside a
  * fragment legally shadows the ambient `invoice`.
  */
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
-import { fencedBlocks, assertFound, findFiles, rel } from "./lib/markdown.mjs";
+import { fencedBlocks, fenceLanguages, assertFound, findFiles, rel, safe } from "./lib/markdown.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -47,28 +47,50 @@ export {};
 // drops it would be this tool's own failure mode.
 const isProgram = (code) => !/^(?:npm|npx|getpeppr|curl|pip)\s/.test(code.trim());
 
+// A block retagged from ```typescript to ```ts stops being compiled and takes
+// the count one below the floor, which a minimum alone reads as a legitimate
+// edit. Refusing the ALIAS catches the cause instead of counting the survivors.
+const ALIASES = new Set(["ts", "tsx", "typescript-jsx", "javascript", "js"]);
 const fragments = [];
+const retagged = [];
 for (const file of findFiles(root, /\.md$/)) {
-  for (const block of fencedBlocks(file, "typescript")) {
-    if (isProgram(block.code)) fragments.push({ ...block, file: rel(root, file) });
+  const where = rel(root, file);
+  for (const { lang, line } of fenceLanguages(file)) {
+    if (ALIASES.has(lang)) retagged.push(`${where}:${line} is tagged \`\`\`${lang}`);
   }
+  for (const block of fencedBlocks(file, "typescript")) {
+    if (isProgram(block.code)) fragments.push({ ...block, file: where });
+  }
+}
+if (retagged.length > 0) {
+  console.error("  FAIL a TypeScript block is tagged with a language this check does not compile:");
+  for (const r of retagged) console.error(`  - ${safe(r)} — use \`\`\`typescript`);
+  process.exit(1);
 }
 assertFound(fragments.length, 5, "TypeScript fragments in the Markdown files");
 
-// Compiled inside the repository so `@getpeppr/sdk`, `@types/node` and the root
-// package.json's `"type": "module"` all resolve exactly as they do for the
-// example files — no `paths` mapping that could drift from reality.
-const dir = mkdtempSync(join(root, ".snippets-check-"));
+// Compiled under node_modules/.cache: close enough to the repository that
+// `@getpeppr/sdk`, `@types/node` and the root package.json's `"type": "module"`
+// resolve exactly as they do for the example files — no `paths` mapping that
+// could drift from reality — while being somewhere no interruption can leave a
+// stray .ts file that the other checks would then read as published content.
+mkdirSync(join(root, "node_modules/.cache"), { recursive: true });
+const dir = mkdtempSync(join(root, "node_modules/.cache/getpeppr-docs-snippets-"));
 let failures = [];
 try {
   const preamble = join(dir, "zz-preamble.d.ts");
   writeFileSync(preamble, PREAMBLE);
+  const canary = join(dir, "zz-canary.ts");
+  writeFileSync(canary, 'const _canary: import("@getpeppr/sdk").InvoiceInput = 1;\n');
   const files = [];
-  for (const f of fragments) {
-    const name = `${f.file.replace(/[^a-z0-9]+/gi, "-")}-L${f.line}.ts`;
+  for (const [i, f] of fragments.entries()) {
+    // Indexed: `a/b.md` and `a-b.md` both slugify to `a-b-md`, and the second
+    // write would silently replace the first — a fragment reported green
+    // without ever being compiled.
+    const name = `${String(i).padStart(3, "0")}-${f.file.replace(/[^a-z0-9]+/gi, "-")}-L${f.line}.ts`;
     const path = join(dir, name);
     writeFileSync(path, f.code + "\n");
-    files.push({ label: `${f.file}:${f.line}`, path });
+    files.push({ label: safe(`${f.file}:${f.line}`), path });
   }
 
   const options = {
@@ -82,7 +104,7 @@ try {
     skipLibCheck: true,
     types: ["node"],
   };
-  const program = ts.createProgram([preamble, ...files.map((f) => f.path)], options);
+  const program = ts.createProgram([preamble, canary, ...files.map((f) => f.path)], options);
 
   const byFile = new Map();
   for (const d of ts.getPreEmitDiagnostics(program)) {
@@ -99,14 +121,21 @@ try {
     } else {
       failures.push(label);
       console.error(`  FAIL ${label}`);
-      for (const e of errors) console.error(`  - ${e}`);
+      for (const e of errors) console.error(`  - ${safe(e)}`);
     }
   }
-  // `skipLibCheck` plus per-fragment reporting would otherwise let a broken
-  // import in the preamble degrade every ambient type to `any` in silence.
-  for (const e of [...errorsFor(preamble), ...(byFile.get("(global)") ?? [])]) {
+  // `skipLibCheck` makes a broken import inside a .d.ts produce NO diagnostic
+  // at all, so reading the preamble's own errors detects nothing. The canary is
+  // a statement that MUST fail to compile; if it passes, the ambient types have
+  // degraded to `any` and every fragment above was checked against nothing.
+  if (errorsFor(canary).length === 0) {
     failures.push("preamble");
-    console.error(`  FAIL preamble — ${e}`);
+    console.error("  FAIL preamble — the canary compiled, so the SDK types resolved to `any`:");
+    console.error("  - every fragment above was type-checked against nothing. Check the @getpeppr/sdk import.");
+  }
+  for (const e of byFile.get("(global)") ?? []) {
+    failures.push("preamble");
+    console.error(`  FAIL preamble — ${safe(e)}`);
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });

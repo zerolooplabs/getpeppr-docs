@@ -1,16 +1,17 @@
 /**
  * Checks the published Postman collection is structurally sound.
  *
- * What this proves: the file is valid JSON, it declares the Collection v2.1
- * schema Postman requires, every leaf is a request with a method and a URL, and
- * no request carries a `prerequest` or `test` script — a collection people
+ * What this proves: the file is valid JSON, it declares the exact Collection
+ * v2.1 schema URL, every leaf is a request with a method and a URL, and nothing
+ * anywhere in it carries a `prerequest` or `test` script — a collection people
  * import runs those on their own machine, so one arriving here should be a
  * deliberate, reviewed decision rather than a silent addition.
  *
- * What it does NOT prove: that Postman imports it. Nothing short of running
- * Postman or Newman proves that, and neither is worth pulling into a
- * secret-free public workflow. `check:routes` separately checks every URL in
- * this file against the published spec, method included.
+ * What it does NOT prove: that the file validates against the Collection v2.1
+ * JSON Schema, or that Postman imports it. Only Postman or Newman proves the
+ * second, and neither is worth pulling into a secret-free public workflow.
+ * `check:routes` separately checks every URL in this file against the published
+ * spec, method included.
  */
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -38,10 +39,20 @@ if (collection.info?.schema !== V21_SCHEMA) {
   problems.push(`info.schema is ${safe(JSON.stringify(collection.info?.schema))}, expected ${V21_SCHEMA}`);
 }
 
+// A script can sit on the collection, on a folder, or on a request; all three
+// run on the importer's machine, so all three are checked.
+const scriptsOn = (node, where) => {
+  for (const event of node.event ?? []) {
+    problems.push(`${safe(where)}: carries a ${safe(event.listen)} script, which runs on the importer's machine`);
+  }
+};
+scriptsOn(collection, "the collection");
+
 const requests = [];
 (function walk(items, trail) {
   for (const item of items ?? []) {
     const path = [...trail, item.name ?? "(unnamed)"];
+    scriptsOn(item, path.join(" / "));
     if (Array.isArray(item.item)) walk(item.item, path);
     else if (item.request) requests.push({ path: path.join(" / "), item });
     else problems.push(`${safe(path.join(" / "))}: neither a folder nor a request`);
@@ -55,9 +66,6 @@ for (const { path, item } of requests) {
   const raw = typeof item.request.url === "string" ? item.request.url : item.request.url?.raw;
   if (!raw) problems.push(`${safe(path)}: request has no URL`);
   if (!item.request.method) problems.push(`${safe(path)}: request has no method`);
-  for (const event of item.event ?? []) {
-    problems.push(`${safe(path)}: carries a ${safe(event.listen)} script, which runs on the importer's machine`);
-  }
 }
 
 if (problems.length > 0) {
@@ -65,4 +73,4 @@ if (problems.length > 0) {
   for (const p of problems) console.error(`  - ${p}`);
   process.exit(1);
 }
-console.log(`  ok   ${file} — ${requests.length} requests, Collection v2.1, no embedded scripts`);
+console.log(`  ok   ${file} — ${requests.length} requests, declares Collection v2.1, no embedded scripts`);

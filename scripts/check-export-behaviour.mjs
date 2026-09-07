@@ -42,6 +42,12 @@
  * real `%PDF-` header, since an assertion reads it back), the document ids, and
  * the send/status responses the workflow examples walk through.
  *
+ * ⚠️ The `pdf_available` branch is CONSTRUCTED, not measured. The probe above
+ * answered 404 — the sandbox rarely renders a PDF, which is the whole reason
+ * this ticket exists — so no real 200-with-a-PDF was ever captured. Its shape
+ * follows the route's success path (`apiBinary("invoices.export_returned", …)`),
+ * and re-measuring it needs an invoice that actually has a PDF rendering.
+ *
  * When the gateway changes any of the measured or copied parts, this file is
  * wrong and must be re-measured — that is the trade this check accepts in
  * exchange for making no network request of its own.
@@ -69,7 +75,7 @@ import { promisify } from "node:util";
 import { mkdirSync, rmSync, writeFileSync, readFileSync, readdirSync, existsSync } from "node:fs";
 import { join, dirname, extname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { fencedBlocks, assertFound, safe } from "./lib/markdown.mjs";
+import { fencedBlocks, assertFound, findFiles, rel, safe } from "./lib/markdown.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const WORK = join(root, ".tmp-export-behaviour");
@@ -142,6 +148,26 @@ const FORMAT_INVALID = {
 const GUID = "b37ad511-95c4-42a1-a93a-3b347361e0ea";
 
 /**
+ * What the real route sends on a success, from `apiBinary("invoices.export_returned", …)`.
+ *
+ * None of the seven examples reads any of it — the SDK does not consult the
+ * result rail on a 2xx, Python tests `status_code` first, and no cURL block uses
+ * `-O`/`-J`. It is here because a replay that answers more thinly than the API
+ * quietly stops being a replay: the first example to read a success header would
+ * be tested against a response shape that never existed.
+ */
+function exportReturnedHeaders(contentType, extension) {
+  return {
+    "Content-Type": contentType,
+    "Content-Disposition": `inline; filename="invoice-${GUID}.${extension}"`,
+    "Getpeppr-Result-Code": "invoices.export_returned",
+    "Getpeppr-Result-Message": "The invoice document was returned in the requested format.",
+    "Getpeppr-Remediation": "none",
+    "Getpeppr-Retryable": "false",
+  };
+}
+
+/**
  * @param {"pdf_available"|"pdf_unavailable"|"invoice_not_found"} scenario
  */
 function startGateway(scenario) {
@@ -203,10 +229,10 @@ function startGateway(scenario) {
       }
       if (format === "pdf") {
         return scenario === "pdf_available"
-          ? send(200, { "Content-Type": "application/pdf" }, PDF_BODY)
+          ? send(200, exportReturnedHeaders("application/pdf", "pdf"), PDF_BODY)
           : send(UNAVAILABLE.status, UNAVAILABLE.headers, UNAVAILABLE.body);
       }
-      return send(200, { "Content-Type": "application/xml" }, XML_BODY);
+      return send(200, exportReturnedHeaders("application/xml", "xml"), XML_BODY);
     }
 
     unexpected.push(`${req.method} ${path}`);
@@ -240,6 +266,17 @@ function pointAtReplay(source, kind, port) {
   let rewrites = 0;
 
   if (kind === "ts") {
+    // ⛔ Refused rather than rewritten. The injection below puts `baseUrl` FIRST
+    // in the object literal, so an example that already declares its own would
+    // win as the later key — and would then run against the SDK's production
+    // default with the host name appearing NOWHERE in the source for the guard
+    // below to catch. No published example does this today; failing loudly is
+    // what keeps that from becoming a silent outbound request the day one does.
+    if (/\bbaseUrl\b/.test(out)) {
+      throw new Error(
+        "this example already sets baseUrl — the rewrite would be shadowed by it, so it is refused rather than executed",
+      );
+    }
     // The SDK's own documented hook: "Use `baseUrl` to point to a custom
     // instance or localhost."
     out = out.replace(/new Peppol\(\{/g, () => {
@@ -378,6 +415,28 @@ for (const block of curlXmlBlocks) {
 }
 
 assertFound(CASES.length, 7, "export cases (four code examples plus three cURL blocks)");
+
+// The four code examples are listed by hand, because each carries expectations
+// no walk could infer — which file its fallback must leave, how many requests it
+// may make. But `lib/markdown.mjs` sets the opposite convention for this
+// repository ("Discovery is by WALK, never by a hardcoded list"), and a hand
+// list silently stops covering the example added next to it.
+//
+// So the list is hand-written and the COVERAGE is discovered: any example that
+// exports a document must appear above, or this fails naming it. Three lines
+// against the one failure mode a minimum count cannot see — growth, rather than
+// collapse.
+const exportingExamples = findFiles(join(root, "examples"), /\.(ts|py)$/).filter((file) =>
+  /getAs\(|\/as\//.test(readFileSync(file, "utf8")),
+);
+const uncovered = exportingExamples.filter(
+  (file) => !CASES.some((c) => c.file && join(root, c.file) === file),
+);
+if (uncovered.length > 0) {
+  throw new Error(
+    `these examples export a document but have no case here: ${uncovered.map((f) => safe(rel(root, f))).join(", ")}`,
+  );
+}
 
 /**
  * Signatures of an example that never ran, as opposed to one that ran and

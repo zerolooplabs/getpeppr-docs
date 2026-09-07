@@ -356,7 +356,7 @@ npm run check
 | `npm run check:shell` | every `bash` block in the Markdown files parses (`bash -n`) |
 | `npm run check:postman` | the Postman collection parses, declares the Collection v2.1 schema, every request has a method and a URL, and nothing in it carries a script |
 | `npm run check:routes` | every mentioned `/v1/…` path exists in the published OpenAPI spec, and its method too wherever the mention states one |
-| `npm run check:export` | the export examples, **executed** against a local replay of the gateway, save a real PDF when one exists and never write an error body under a `.pdf` or `.xml` name |
+| `npm run check:export` | the export examples, **executed** against a local replay of the gateway, save exactly the bytes the replay returned when a PDF exists, and never write an error body under a `.pdf` or `.xml` name |
 
 Each sweep also asserts a minimum count, so a check that finds nothing left to
 check fails rather than passing green.

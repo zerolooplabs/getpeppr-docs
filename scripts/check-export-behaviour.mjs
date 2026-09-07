@@ -312,7 +312,11 @@ function pointAtReplay(source, kind, port) {
  *                replaced it.
  * `xml`        — true when SOME non-empty .xml is required (used where the
  *                example writes exactly one), false when NO .xml may be produced.
- * `pdf`        — true when a real PDF must be on disk.
+ * `pdf`        — true when a file carrying the `%PDF-` marker, of exactly the
+ *                length the replay sent, must be on disk. NOT "a real PDF": the
+ *                fixture is not a valid document and this check never opens one.
+ *                What it proves is that the bytes on disk are the bytes that
+ *                came back — enough for the defect it exists for, and no more.
  * `asRequests` — exact number of /as/{format} requests the example may make.
  *                Set where the file evidence cannot discriminate on its own.
  *

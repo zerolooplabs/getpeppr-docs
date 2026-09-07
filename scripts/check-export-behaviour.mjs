@@ -107,6 +107,12 @@ function startGateway(scenario) {
   // waitFor polled an unmatched 404 for its whole timeout and the run simply
   // hung, which reads as a slow check rather than a broken one.
   const unexpected = [];
+  // Which export formats were asked for, in order. Counting them is what
+  // separates a fallback keyed on the RESULT CODE from one keyed on the bare
+  // 404 status: on an unknown invoice both end with a non-zero exit and no
+  // file, so the observable outcome is identical — only the number of requests
+  // differs (one, versus a pointless second that earns its own 404).
+  const asRequests = [];
   const server = createServer((req, res) => {
     const url = new URL(req.url ?? "/", "http://127.0.0.1");
     const path = url.pathname;
@@ -132,11 +138,12 @@ function startGateway(scenario) {
     const asMatch = /^\/v1\/invoices\/[^/]+\/as\/(.+)$/.exec(path);
     if (req.method === "GET" && asMatch) {
       const format = decodeURIComponent(asMatch[1]);
+      asRequests.push(format);
       if (scenario === "invoice_not_found") {
         // The whole document is unknown — every format answers the same way.
-        // An example that treats this as "no PDF, take the XML" would loop
-        // straight into a second 404, so this scenario exists to catch a
-        // fallback keyed on the STATUS instead of on the result code.
+        // An example that reads this as "no PDF, take the XML" asks a second
+        // time and earns a second 404; it is caught by the request COUNT, not
+        // by the files it left, which are the same either way.
         return send(NOT_FOUND.status, NOT_FOUND.headers, NOT_FOUND.body);
       }
       if (format === "pdf") {
@@ -152,7 +159,7 @@ function startGateway(scenario) {
   });
   server.unref();
   return new Promise((resolve) => {
-    server.listen(0, "127.0.0.1", () => resolve({ server, port: server.address().port, unexpected }));
+    server.listen(0, "127.0.0.1", () => resolve({ server, port: server.address().port, unexpected, asRequests }));
   });
 }
 
@@ -207,6 +214,8 @@ function pointAtReplay(source, kind, port) {
  * `xml`       — true when a non-empty .xml file is required (the explicit
  *               second request), false when NO .xml may be produced.
  * `pdf`       — true when a real PDF must be on disk.
+ * `asRequests` — exact number of /as/{format} requests the example may make.
+ *                Only set where the file evidence cannot discriminate.
  *
  * Every scenario also carries one assertion no case can opt out of: no file
  * with a .pdf name may exist unless it starts with %PDF-. That is the defect
@@ -221,7 +230,7 @@ const CASES = [
     expect: {
       pdf_available: { exit: 0, pdf: true },
       pdf_unavailable: { exit: 0, pdf: false, xml: true },
-      invoice_not_found: { exit: "nonzero", pdf: false },
+      invoice_not_found: { exit: "nonzero", pdf: false, asRequests: 1 },
     },
   },
   {
@@ -231,7 +240,7 @@ const CASES = [
     expect: {
       pdf_available: { exit: 0, pdf: true },
       pdf_unavailable: { exit: 0, pdf: false, xml: true },
-      invoice_not_found: { exit: "nonzero", pdf: false },
+      invoice_not_found: { exit: "nonzero", pdf: false, asRequests: 1 },
     },
   },
   {
@@ -241,7 +250,7 @@ const CASES = [
     expect: {
       pdf_available: { exit: 0, pdf: true },
       pdf_unavailable: { exit: 0, pdf: false, xml: true },
-      invoice_not_found: { exit: "nonzero", pdf: false },
+      invoice_not_found: { exit: "nonzero", pdf: false, asRequests: 1 },
     },
   },
   {
@@ -251,7 +260,7 @@ const CASES = [
     expect: {
       pdf_available: { exit: 0, pdf: true },
       pdf_unavailable: { exit: 0, pdf: false, xml: true },
-      invoice_not_found: { exit: "nonzero", pdf: false },
+      invoice_not_found: { exit: "nonzero", pdf: false, asRequests: 1 },
     },
   },
 ];
@@ -275,7 +284,7 @@ for (const block of curlPdfBlocks) {
       // matters: fail loudly, and leave no file behind.
       pdf_available: { exit: 0, pdf: true },
       pdf_unavailable: { exit: "nonzero", pdf: false, xml: false },
-      invoice_not_found: { exit: "nonzero", pdf: false, xml: false },
+      invoice_not_found: { exit: "nonzero", pdf: false, xml: false, asRequests: 1 },
     },
   });
 }
@@ -299,7 +308,7 @@ for (const block of curlXmlBlocks) {
     expect: {
       pdf_available: { exit: 0, pdf: false, xml: true },
       pdf_unavailable: { exit: 0, pdf: false, xml: true },
-      invoice_not_found: { exit: "nonzero", pdf: false, xml: false },
+      invoice_not_found: { exit: "nonzero", pdf: false, xml: false, asRequests: 1 },
     },
   });
 }
@@ -378,7 +387,7 @@ function producedFiles(dir) {
 }
 
 for (const scenario of SCENARIOS) {
-  const { server, port, unexpected } = await startGateway(scenario);
+  const { server, port, unexpected, asRequests } = await startGateway(scenario);
   try {
     for (const testCase of CASES) {
       const label = `${scenario}  ${testCase.id}`;
@@ -393,6 +402,7 @@ for (const scenario of SCENARIOS) {
       }
 
       const unseen = unexpected.splice(0);
+      const asked = asRequests.splice(0);
       const want = testCase.expect[scenario];
       const files = producedFiles(result.dir);
       const problems = [];
@@ -432,6 +442,17 @@ for (const scenario of SCENARIOS) {
       if (want.pdf === true && realPdfs.length === 0) problems.push("expected a PDF on disk, found none");
       if (want.pdf === false && files.some((f) => f.ext === ".pdf")) {
         problems.push(`expected no .pdf file, found ${files.filter((f) => f.ext === ".pdf").map((f) => safe(f.name)).join(", ")}`);
+      }
+
+      // An unknown invoice must cost exactly one export request. Asserted on the
+      // COUNT because the files and the exit status cannot tell the two apart:
+      // a fallback keyed on the bare 404 asks again, is refused again, and ends
+      // in the same place as the correct example. A mutant that made exactly
+      // that substitution survived this check until the count was added.
+      if (typeof want.asRequests === "number" && asked.length !== want.asRequests) {
+        problems.push(
+          `expected ${want.asRequests} export request(s), saw ${asked.length}: ${asked.map(safe).join(", ") || "none"}`,
+        );
       }
 
       const xmls = files.filter((f) => f.ext === ".xml" && f.size > 0);

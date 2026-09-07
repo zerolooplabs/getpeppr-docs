@@ -3,20 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Toolchain that compiles or parses every published example in this repository. It never calls the getpeppr API and consumes no secret; its only network request is an anonymous GET of the public OpenAPI spec.",
+  "description": "Toolchain that compiles, parses or RUNS every published example in this repository. It never calls the getpeppr API and consumes no secret; `check:export` executes the export examples against a local replay of the gateway on 127.0.0.1, and the only outbound request any check makes is an anonymous GET of the public OpenAPI spec.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zerolooplabs/getpeppr-docs.git"
   },
   "scripts": {
-    "check": "npm run check:examples && npm run check:snippets && npm run check:python && npm run check:shell && npm run check:postman && npm run check:routes",
+    "check": "npm run check:examples && npm run check:snippets && npm run check:python && npm run check:shell && npm run check:postman && npm run check:routes && npm run check:export",
     "check:examples": "node scripts/check-examples.mjs",
     "check:snippets": "node scripts/check-readme-snippets.mjs",
     "check:python": "node scripts/check-python.mjs",
     "check:shell": "node scripts/check-shell-blocks.mjs",
     "check:postman": "node scripts/check-postman.mjs",
-    "check:routes": "node scripts/check-routes.mjs"
+    "check:routes": "node scripts/check-routes.mjs",
+    "check:export": "node scripts/check-export-behaviour.mjs"
   },
   "devDependencies": {
     "@getpeppr/sdk": "^5.4.1",

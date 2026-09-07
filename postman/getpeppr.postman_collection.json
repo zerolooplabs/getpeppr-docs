@@ -140,6 +140,7 @@
         {
           "name": "Export Invoice (PDF or UBL XML)",
           "request": {
+            "description": "One format per request. `pdf` is served only when the access point rendered a PDF for this document, and the sandbox rarely does. When there is none, this answers 404 with result code `invoices.export_format_unavailable` and a body listing the `availableMimeTypes` — it never returns the XML in place of the PDF you asked for. To get the UBL, send this request again with `format` set to `original`, `payload` or `xml.ubl.invoice.bis3`.",
             "method": "GET",
             "url": {
               "raw": "{{base_url}}/v1/invoices/:id/as/:format",

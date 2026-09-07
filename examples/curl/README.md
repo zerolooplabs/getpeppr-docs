@@ -43,17 +43,25 @@ curl https://api.getpeppr.dev/v1/invoices/inv_abc123 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
-### Export invoice as PDF (when the provider produced one)
+### Export invoice as PDF (when the access point rendered one)
 
 ```bash
-curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/pdf \
+curl --fail https://api.getpeppr.dev/v1/invoices/inv_abc123/as/pdf \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -o invoice.pdf
 ```
 
-> A PDF only exists when the access point rendered one for this document. When it did
-> not (the sandbox rarely does), the endpoint answers `200` with the UBL XML instead —
-> check the `Content-Type` header before trusting the file extension you chose.
+> A PDF only exists when the access point rendered one for this document, and the
+> sandbox rarely does. When there is none, the endpoint answers `404` with result code
+> `invoices.export_format_unavailable` and a JSON body listing the `availableMimeTypes`.
+> It never substitutes the UBL XML for the PDF you asked for.
+>
+> **`--fail` is not optional here.** Without it curl treats the error body as content
+> and writes that JSON into `invoice.pdf` — a file with a `.pdf` name that no reader
+> can open. With it, curl exits non-zero and writes no file.
+>
+> To get the UBL instead, make a second, explicit request — see **Export invoice as
+> XML** below. It is never a fallback the PDF call performs for you.
 
 ### Send a credit note
 
@@ -113,7 +121,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
 ### Export invoice as XML
 
 ```bash
-curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/xml.ubl.invoice.bis3 \
+curl --fail https://api.getpeppr.dev/v1/invoices/inv_abc123/as/xml.ubl.invoice.bis3 \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -o invoice.xml
 ```
@@ -121,12 +129,22 @@ curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/xml.ubl.invoice.bis3 \
 ### Export the document as transmitted (UBL XML, SBDH envelope included)
 
 ```bash
-curl https://api.getpeppr.dev/v1/invoices/inv_abc123/as/original \
+curl --fail https://api.getpeppr.dev/v1/invoices/inv_abc123/as/original \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
-  -o invoice.xml
+  -o invoice-transmitted.xml
 ```
 
 Use `/as/payload` for the same document without the SBDH envelope. There is no JSON export: what left for the network is XML.
+
+`--fail` is on every one of these for the same reason it is on the PDF call: without
+it, curl writes the JSON error body into the file you named, and you end up holding
+an `.xml` that is not XML.
+
+It covers HTTP errors, and only those. A transfer that dies *after* the first bytes
+arrive still leaves a truncated file behind — on curl 7.83 and later, add
+`--remove-on-error` to have curl delete it. It is left out of the commands above on
+purpose: older curl builds reject the flag outright, which would break the copy for
+the very reader it is meant to protect.
 
 ## Validation
 

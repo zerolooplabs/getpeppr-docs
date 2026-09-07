@@ -1,5 +1,5 @@
-# Every example published here is compiled or parsed on every pull request and
-# on every push to `main`.
+# Every example published here is compiled, parsed or RUN on every pull request
+# and on every push to `main`.
 #
 # This repository is public and linked from every page on getpeppr.dev: an
 # integrator copies these files verbatim. They had never been checked
@@ -8,11 +8,29 @@
 # still published in 16 places across 8 files. A one-off audit does not survive
 # the next commit; this does.
 #
+# Parsing alone was not enough, and the gap was named before it was closed:
+# `check-python.mjs` listed "a value written to a file with the wrong extension"
+# among the things it cannot see. That is precisely what shipped — the cURL
+# export example had no `--fail`, so the gateway's 404 JSON body was written into
+# `invoice.pdf` (GPR-1286). `check:export` closes it by EXECUTING the export
+# examples.
+#
 # No secret is used and no getpeppr API call is made. `tsc --noEmit`, `bash -n`
-# and `py_compile` all parse without executing, and `npm ci --ignore-scripts`
-# runs no package lifecycle script. The job does reach the network to install
-# from npm and to restore the setup-node cache; the CHECKS themselves make one
-# request between them, an anonymous GET of the public OpenAPI spec.
+# and `py_compile` parse without executing; `check:export` does execute, but
+# against a replay of the gateway served from 127.0.0.1. Three guards keep it
+# there: the URL rewrite throws when it matches nothing, it throws when a literal
+# api.getpeppr.dev survives it, and a case that never reached the replay fails
+# instead of being scored on the files it did not write. (The literal guard is
+# empty on the TypeScript path — the host name lives in the SDK default, not in
+# the source — which is why the third guard exists.) `npm ci --ignore-scripts`
+# runs no package lifecycle script. The job reaches the network to install from
+# npm and PyPI and to restore the setup-node cache; the CHECKS themselves make
+# one outbound request between them, an anonymous GET of the public OpenAPI spec.
+#
+# This job EXECUTES code that a pull request controls. That is safe here and only
+# here because the trigger is `pull_request`, never `pull_request_target`: GitHub
+# passes no secret to the runner for a fork, and the token is read-only. Adding
+# `pull_request_target` would turn every line below into an exfiltration path.
 name: CI
 
 on:
@@ -34,7 +52,7 @@ concurrency:
 
 jobs:
   examples:
-    name: Examples compile and parse
+    name: Examples compile, parse and run
     runs-on: ubuntu-latest
     steps:
       # Actions are pinned to the commit their tag resolved to on 2026-09-04:
@@ -61,10 +79,18 @@ jobs:
       # outright means a pull request cannot introduce one that runs here.
       - run: npm ci --ignore-scripts
 
+      # The Python examples are plain HTTP and need their dependencies to RUN.
+      # Without them `check:export` reported TWO of its six Python cases green:
+      # the script died on the import, wrote no file, and "wrote no file" is
+      # exactly what the `invoice_not_found` scenario requires. The check now
+      # refuses that output, so this step is part of the check rather than a
+      # convenience.
+      - run: pip install -r examples/python/requirements.txt
+
       # Each check is its own step so a red run names the surface that broke
       # without anyone opening the log, and `if: always()` keeps the later steps
       # running after an earlier failure — one red lane must not hide the state
-      # of the other five.
+      # of the other six.
       - name: TypeScript examples compile against @getpeppr/sdk
         if: always()
         run: npm run check:examples
@@ -88,3 +114,10 @@ jobs:
       - name: Every mentioned API path and method exists in the published spec
         if: always()
         run: npm run check:routes
+
+      # The only step that RUNS a published example rather than reading it, and
+      # the only one that can see a file saved under a name its contents do not
+      # match. It answers from a local replay, never from the API.
+      - name: Export examples behave against a replay of the gateway
+        if: always()
+        run: npm run check:export

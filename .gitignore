@@ -1,3 +1,8 @@
 __pycache__/
 *.pyc
 node_modules/
+
+# Working directory of `npm run check:export`, which RUNS the examples in a
+# throwaway copy. Removed by the check itself; ignored so an interrupted run
+# cannot be committed.
+.tmp-export-behaviour/

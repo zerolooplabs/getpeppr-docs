@@ -1,0 +1,7 @@
+# The Python examples are plain HTTP against the getpeppr REST API — there is no
+# getpeppr Python SDK. `requests` is the only thing they need, and it was implicit
+# until GPR-1286 made the examples EXECUTABLE in CI and the missing import turned
+# six checks green for the wrong reason: a script that dies on `import requests`
+# writes no file, which is indistinguishable from a script that correctly refused
+# to write one.
+requests>=2.31

@@ -4,7 +4,7 @@
  * Export a sent invoice as PDF or UBL XML.
  */
 
-import { Peppol } from "@getpeppr/sdk";
+import { Peppol, PeppolApiError } from "@getpeppr/sdk";
 import { writeFile } from "node:fs/promises";
 
 const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
@@ -12,19 +12,27 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 const invoiceId = "inv_abc123";
 
 // ── Export as PDF ─────────────────────────────────────────
-// /as/pdf returns the PDF only when the provider produced one — otherwise the
-// original UBL XML comes back instead. The REST contract says to check the
-// Content-Type, but getAs() hands you raw bytes without the header: look at
-// the leading marker instead — a PDF starts with "%PDF-".
+// A PDF exists only when the access point rendered one for this document, and
+// the sandbox rarely does. When there is none the endpoint answers 404 with the
+// result code `invoices.export_format_unavailable` — it never substitutes the
+// XML for the PDF you asked for. So there is nothing to sniff: ask for the UBL
+// in a SECOND, explicit request, and give that file its own .xml name.
 
-const pdf = await peppol.invoices.getAs(invoiceId, "pdf");
-const pdfBytes = Buffer.from(pdf); // getAs() returns an ArrayBuffer
-if (pdfBytes.subarray(0, 5).toString("latin1") === "%PDF-") {
-  await writeFile("invoice.pdf", pdfBytes);
+try {
+  const pdf = await peppol.invoices.getAs(invoiceId, "pdf");
+  await writeFile("invoice.pdf", Buffer.from(pdf));
   console.log("Saved invoice.pdf");
-} else {
-  await writeFile("invoice-original.xml", pdfBytes);
-  console.log("No PDF yet — saved the UBL XML as invoice-original.xml instead");
+} catch (err) {
+  // Re-throw anything else. A 404 for an invoice that does not exist carries
+  // `invoices.not_found`, not this code — asking for its XML would only earn a
+  // second 404, and swallowing the difference would hide a wrong id.
+  if (!(err instanceof PeppolApiError) || err.resultCode !== "invoices.export_format_unavailable") {
+    throw err;
+  }
+
+  const xml = await peppol.invoices.getAs(invoiceId, "original");
+  await writeFile("invoice-original.xml", Buffer.from(xml));
+  console.log("No PDF for this document — saved the UBL XML as invoice-original.xml");
 }
 
 // ── Export as UBL XML (BIS 3.0) ───────────────────────────
@@ -34,9 +42,8 @@ await writeFile("invoice.xml", Buffer.from(xml));
 console.log("Saved invoice.xml");
 
 // ── Export the document as transmitted (UBL XML, SBDH envelope included) ──
-// There is no JSON export: what left for the network is XML. The REST API also
-// serves /as/payload — the same document without the SBDH envelope — which the
-// SDK's DocumentFormat type does not yet list.
+// There is no JSON export: what left for the network is XML. `payload` returns
+// the same document with the SBDH envelope stripped.
 
 const original = await peppol.invoices.getAs(invoiceId, "original");
 await writeFile("invoice-transmitted.xml", Buffer.from(original));

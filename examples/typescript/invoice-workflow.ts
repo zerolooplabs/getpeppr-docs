@@ -8,7 +8,7 @@
  * To correct an invoice, send a credit note instead.
  */
 
-import { Peppol } from "@getpeppr/sdk";
+import { Peppol, PeppolApiError } from "@getpeppr/sdk";
 import { writeFileSync } from "fs";
 
 const peppol = new Peppol({ apiKey: "sk_sandbox_abc123..." });
@@ -55,17 +55,24 @@ const final = await peppol.invoices.waitFor(result.id, "delivered", {
 console.log(`Final status: ${final.status}`);
 
 // -- Step 3: Export as PDF ------------------------------------------------------
-// /as/pdf returns the PDF only when the provider produced one — otherwise the
-// original UBL XML comes back instead. The SDK hands you raw bytes without the
-// Content-Type header, so check the leading "%PDF-" marker before naming the
-// file, or you will save XML with a .pdf extension.
+// A PDF exists only when the access point rendered one for this document, and
+// the sandbox rarely does. When there is none the endpoint answers 404 with the
+// result code `invoices.export_format_unavailable` — it never substitutes the
+// XML for the PDF you asked for. So ask for the UBL in a SECOND, explicit
+// request, and give that file its own .xml name.
 
-const pdfBuffer = await peppol.invoices.getAs(result.id, "pdf");
-const pdfBytes = Buffer.from(pdfBuffer);
-if (pdfBytes.subarray(0, 5).toString("latin1") === "%PDF-") {
+try {
+  const pdfBytes = Buffer.from(await peppol.invoices.getAs(result.id, "pdf"));
   writeFileSync("INV-2026-100.pdf", pdfBytes);
   console.log(`PDF saved (${pdfBytes.byteLength} bytes)`);
-} else {
-  writeFileSync("INV-2026-100-original.xml", pdfBytes);
-  console.log("No PDF yet — saved the UBL XML as INV-2026-100-original.xml instead");
+} catch (err) {
+  // Re-throw anything else. A 404 for an invoice that does not exist carries
+  // `invoices.not_found`, not this code.
+  if (!(err instanceof PeppolApiError) || err.resultCode !== "invoices.export_format_unavailable") {
+    throw err;
+  }
+
+  const xmlBytes = Buffer.from(await peppol.invoices.getAs(result.id, "original"));
+  writeFileSync("INV-2026-100-original.xml", xmlBytes);
+  console.log("No PDF for this document — saved the UBL XML as INV-2026-100-original.xml");
 }

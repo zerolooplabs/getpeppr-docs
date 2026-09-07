@@ -138,7 +138,7 @@ send → track status → export (PDF, XML)
 | `POST` | `/v1/invoices` | `invoices.send()` | Validate, create, and send in one step |
 | `GET` | `/v1/invoices` | `invoices.list()` | List invoices (paginated) |
 | `GET` | `/v1/invoices/:id` | `invoices.getStatus()` | Get invoice details and delivery status |
-| `GET` | `/v1/invoices/:id/as/:format` | `invoices.getAs()` | Download the transmitted document — UBL XML (`original`, `payload`, `xml.ubl.invoice.bis3`); `pdf` only when the provider produced one, otherwise the XML comes back (check `Content-Type`) |
+| `GET` | `/v1/invoices/:id/as/:format` | `invoices.getAs()` | Download the transmitted document — UBL XML (`original`, `payload`, `xml.ubl.invoice.bis3`); `pdf` only when the access point rendered one, otherwise `404` with result code `invoices.export_format_unavailable`. The XML is never substituted for the PDF — request it explicitly |
 
 Invoices are immutable after submission — there are no drafts, updates, or deletes. To correct an invoice, send a credit note.
 

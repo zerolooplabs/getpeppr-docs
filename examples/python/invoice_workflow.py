@@ -77,22 +77,34 @@ for _ in range(20):  # poll up to 20 times (60 seconds)
 
 
 # -- Step 3: Export as PDF -------------------------------------------------------
-# /as/pdf returns the PDF only when the provider produced one — otherwise the
-# original UBL XML comes back with a 200. Check the Content-Type before naming
-# the file, or you will save XML with a .pdf extension.
+# A PDF exists only when the access point rendered one for this document, and
+# the sandbox rarely does. When there is none the endpoint answers 404 with the
+# result code `invoices.export_format_unavailable` — it never substitutes the
+# XML for the PDF you asked for. So ask for the UBL in a SECOND, explicit
+# request, and give that file its own .xml name.
 
 response = requests.get(
     f"{BASE_URL}/v1/invoices/{invoice_id}/as/pdf",
     headers={"Authorization": f"Bearer {API_KEY}"},
     timeout=30,
 )
-response.raise_for_status()
 
-if response.headers.get("Content-Type", "").startswith("application/pdf"):
+if response.status_code == 200:
     with open("INV-2026-100.pdf", "wb") as f:
         f.write(response.content)
     print(f"PDF saved ({len(response.content)} bytes)")
+elif response.headers.get("Getpeppr-Result-Code") == "invoices.export_format_unavailable":
+    fallback = requests.get(
+        f"{BASE_URL}/v1/invoices/{invoice_id}/as/original",
+        headers={"Authorization": f"Bearer {API_KEY}"},
+        timeout=30,
+    )
+    fallback.raise_for_status()
+    with open("INV-2026-100-original.xml", "wb") as f:
+        f.write(fallback.content)
+    print("No PDF for this document — saved the UBL XML as INV-2026-100-original.xml")
 else:
-    with open("INV-2026-100-original.xml", "w") as f:
-        f.write(response.text)
-    print("No PDF yet — saved the UBL XML as INV-2026-100-original.xml instead")
+    # Anything else is not a missing PDF. A 404 for an invoice that does not
+    # exist carries `invoices.not_found`, and asking for its XML would only earn
+    # a second 404.
+    response.raise_for_status()

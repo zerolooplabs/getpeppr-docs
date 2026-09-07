@@ -142,7 +142,7 @@ try {
     moduleResolution: ts.ModuleResolutionKind.NodeNext,
     esModuleInterop: true,
     noEmit: true,
-    skipLibCheck: true,
+    skipLibCheck: false,
     types: ["node"],
   };
   const program = ts.createProgram([preamble, canary, ...files.map((f) => f.path)], options);
@@ -165,10 +165,11 @@ try {
       for (const e of errors) console.error(`  - ${safe(e)}`);
     }
   }
-  // `skipLibCheck` makes a broken import inside a .d.ts produce NO diagnostic
-  // at all, so reading the preamble's own errors detects nothing. The canary is
-  // a statement that MUST fail to compile; if it passes, the ambient types have
-  // degraded to `any` and every fragment above was checked against nothing.
+  // `skipLibCheck` is OFF (GPR-1287): a broken relative import inside the
+  // published .d.ts — the TS2835 family that shipped in @getpeppr/sdk ≤ 5.4.0 —
+  // now fails this check instead of passing silently. The canary below still
+  // guards the OTHER degradation mode: ambient types resolving to `any`, where
+  // every fragment above would be checked against nothing.
   if (errorsFor(canary).length === 0) {
     failures.push("preamble");
     console.error("  FAIL preamble — the canary compiled, so the SDK types resolved to `any`:");
@@ -177,6 +178,20 @@ try {
   for (const e of byFile.get("(global)") ?? []) {
     failures.push("preamble");
     console.error(`  FAIL preamble — ${safe(e)}`);
+  }
+  // Diagnostics attached to LIBRARY files (e.g. a broken relative import
+  // inside node_modules/@getpeppr/sdk/**/*.d.ts — the GPR-1287 TS2835 family)
+  // belong to no fragment bucket: collected, then dropped. With skipLibCheck
+  // off they must fail the check — an integrator's compiler stops on exactly
+  // these (verified by sabotaging the installed declaration: green before
+  // this loop, red after).
+  const expected = new Set([preamble, canary, ...files.map((f) => f.path)]);
+  for (const [key, errs] of byFile) {
+    const norm = key.replace(/\\/g, "/");
+    if (key === "(global)" || expected.has(key) || expected.has(norm)) continue;
+    failures.push("sdk-types");
+    console.error(`  FAIL sdk-types — ${safe(norm)}`);
+    for (const e of errs) console.error(`  - ${safe(e)}`);
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });

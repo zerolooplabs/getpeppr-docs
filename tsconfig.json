@@ -1,5 +1,5 @@
 {
-  "//": "Compiles examples/typescript/ the way an integrator would: strict, ESM, Node resolution, against the @getpeppr/sdk published on npm. `npm run check:examples`.",
+  "//": "Compiles examples/typescript/ the way an integrator would: strict, ESM, Node resolution, against the @getpeppr/sdk published on npm — INCLUDING the published .d.ts files: no skipLibCheck, which is what an integrator gets by default and what would have caught the TS2835 declaration defect shipped in @getpeppr/sdk 5.4.0 (GPR-1287). `npm run check:examples`.",
   "compilerOptions": {
     "strict": true,
     "target": "ES2022",
@@ -8,7 +8,6 @@
     "moduleResolution": "NodeNext",
     "esModuleInterop": true,
     "noEmit": true,
-    "skipLibCheck": true,
     "types": ["node"]
   },
   "include": ["examples/typescript/**/*.ts"]

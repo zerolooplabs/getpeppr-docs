@@ -19,7 +19,7 @@
     "check:routes": "node scripts/check-routes.mjs"
   },
   "devDependencies": {
-    "@getpeppr/sdk": "^5.0.0",
+    "@getpeppr/sdk": "^5.4.1",
     "@types/express": "^5.0.0",
     "@types/node": "^26.4.0",
     "express": "^5.0.0",

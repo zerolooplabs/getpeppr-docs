@@ -1,7 +1,18 @@
-# The Python examples are plain HTTP against the getpeppr REST API — there is no
-# getpeppr Python SDK. `requests` is the only thing they need, and it was implicit
-# until GPR-1286 made the examples EXECUTABLE in CI and the missing import turned
-# six checks green for the wrong reason: a script that dies on `import requests`
-# writes no file, which is indistinguishable from a script that correctly refused
-# to write one.
+# Dependencies of the Python examples. There is no getpeppr Python SDK — they are
+# plain HTTP against the REST API.
+#
+# This file exists because the dependencies were IMPLICIT until GPR-1286 made the
+# examples executable in CI, and the missing import turned two checks green for
+# the wrong reason: a script that dies on `import requests` writes no file, which
+# is indistinguishable from a script that correctly refused to write one.
+#
+# ⛔ Keep it complete, not just correct for the example you are looking at. The
+# first draft said "requests is the only thing they need" — flask had been
+# imported by webhook_handler.py all along, declared nowhere, and `py_compile`
+# cannot see it because it never resolves an import.
+
+# Every example that calls the API.
 requests>=2.31
+
+# webhook_handler.py only — it serves an endpoint rather than calling one.
+flask>=3.0

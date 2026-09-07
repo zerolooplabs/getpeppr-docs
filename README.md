@@ -330,8 +330,8 @@ const final = await peppol.invoices.waitFor(invoice.id, "accepted", {
 
 ## Verifying these examples
 
-Every example in this repository is compiled or parsed on every pull request and
-on every push to `main` ([CI](.github/workflows/ci.yml)).
+Every example in this repository is compiled, parsed or run on every pull request
+and on every push to `main` ([CI](.github/workflows/ci.yml)).
 
 Every `/v1/…` path mentioned in the published content — the endpoint tables
 above, the prose, the Python and TypeScript examples, the curl blocks and the
@@ -344,6 +344,7 @@ To run the same checks locally:
 
 ```bash
 npm ci
+pip install -r examples/python/requirements.txt   # check:export runs the Python examples
 npm run check
 ```
 
@@ -355,25 +356,35 @@ npm run check
 | `npm run check:shell` | every `bash` block in the Markdown files parses (`bash -n`) |
 | `npm run check:postman` | the Postman collection parses, declares the Collection v2.1 schema, every request has a method and a URL, and nothing in it carries a script |
 | `npm run check:routes` | every mentioned `/v1/…` path exists in the published OpenAPI spec, and its method too wherever the mention states one |
+| `npm run check:export` | the export examples, **executed** against a local replay of the gateway, save a real PDF when one exists and never write an error body under a `.pdf` or `.xml` name |
 
 Each sweep also asserts a minimum count, so a check that finds nothing left to
 check fails rather than passing green.
 
 ### What these checks do not prove
 
-They parse and type-check; they never execute. So a syntactically valid example
-that is wrong at runtime still passes: a misspelled response field, a value
-written to a file with the wrong extension, a request body that is not valid
-JSON, a `curl` flag that does not exist. `check:routes` covers the URLs and their
-methods; the field-level half is uncovered, and finding it still takes a human
-reading the examples against the API.
+All but one of them parse and type-check without executing, so a syntactically
+valid example that is wrong at runtime still passes: a misspelled response field,
+a request body that is not valid JSON, a `curl` flag that does not exist.
+`check:routes` covers the URLs and their methods; the field-level half is
+uncovered outside the export path, and finding it still takes a human reading the
+examples against the API.
+
+`check:export` is the exception, and it is narrow on purpose. It **runs** the
+export examples — the four TypeScript and Python files and the three `curl`
+blocks — against a local replay of the gateway, in three scenarios: a PDF exists,
+no PDF exists, the invoice is unknown. It refuses a file whose name its contents
+contradict, and requires the explicit XML request to leave the file it promises.
+It says nothing about any other example, and nothing about whether the gateway
+still answers the way the replay says it does.
 
 No check calls the getpeppr API, and none needs a key. Between them the checks
-make one network request, an anonymous `GET` of the public OpenAPI spec —
-`check:routes` fails if that URL answers `4xx`, because then the spec is not
+make one outbound network request, an anonymous `GET` of the public OpenAPI spec
+— `check:routes` fails if that URL answers `4xx`, because then the spec is not
 where we say it is, and skips with a warning on a timeout or a `5xx`, which is
-the upstream's problem and has its own monitor. (Installing the toolchain, of
-course, reaches npm.)
+the upstream's problem and has its own monitor. `check:export` talks only to a
+server it starts on `127.0.0.1`. (Installing the toolchain, of course, reaches
+npm and PyPI.)
 
 ## License
 

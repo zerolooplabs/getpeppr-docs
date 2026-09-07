@@ -1,7 +1,8 @@
 /**
  * RUNS the published export examples against a local server that replays the
- * gateway's real answers, and refuses the one outcome that hurts: a file named
- * `.pdf` that is not a PDF.
+ * gateway's real answers, and refuses the outcome that hurts: a file whose first
+ * bytes contradict the name it was given — a `.pdf` that is not a PDF, a `.xml`
+ * that is not XML.
  *
  * ## Why this check exists
  *
@@ -19,11 +20,13 @@
  * the API had stopped performing, and a green CI said nothing, because none of
  * these files had ever been EXECUTED.
  *
- * ## What the server replays
+ * ## What the server replays, and where each part comes from
  *
- * The statuses, headers and bodies below are TRANSCRIBED from a real sandbox
- * probe run on 2026-09-07 against `api.getpeppr.dev` serving commit a64645c,
- * on an invoice that already existed (no document was sent):
+ * Not all of it carries the same weight, so the provenance is stated per part
+ * rather than claimed wholesale — a fixture a human made up tests the fixture.
+ *
+ * MEASURED, from a sandbox probe run on 2026-09-07 against `api.getpeppr.dev`
+ * serving commit a64645c, on an invoice that already existed (nothing was sent):
  *
  *   GET /v1/invoices/{guid}/as/pdf       -> 404 application/json
  *                                           Getpeppr-Result-Code: invoices.export_format_unavailable
@@ -31,18 +34,34 @@
  *                                            "availableMimeTypes":["application/xml"]}
  *   GET /v1/invoices/{guid}/as/original  -> 200 application/xml, 5888 bytes
  *
- * They are copied rather than invented on purpose: a fixture that a human made
- * up tests the fixture. When the gateway changes these, this file is wrong and
- * must be re-measured — that is the trade this check accepts in exchange for
- * making no network request of its own.
+ * COPIED from the gateway's own source, not from the wire: `NOT_FOUND` and
+ * `FORMAT_INVALID` (their codes, statuses and catalogue sentences), and
+ * `VALID_FORMATS`.
+ *
+ * INVENTED, because only their shape matters: the XML body, the PDF bytes (a
+ * real `%PDF-` header, since an assertion reads it back), the document ids, and
+ * the send/status responses the workflow examples walk through.
+ *
+ * When the gateway changes any of the measured or copied parts, this file is
+ * wrong and must be re-measured — that is the trade this check accepts in
+ * exchange for making no network request of its own.
  *
  * ## What it does NOT prove
  *
- * That the gateway still answers this way. Nothing here talks to getpeppr; the
- * examples are pointed at 127.0.0.1 and the run ABORTS before executing anything
- * if a rewritten source still mentions `api.getpeppr.dev`, so a failed rewrite
- * can never silently reach the real API. Contract drift on the other side is
- * caught by re-probing, not by this file.
+ * That the gateway still answers this way. Nothing here is meant to talk to
+ * getpeppr: the examples are pointed at 127.0.0.1, and three guards compose to
+ * keep it that way — the rewrite throws when it matches nothing, it throws when
+ * a literal `api.getpeppr.dev` survives it, and every case must have reached the
+ * replay at least once or it fails.
+ *
+ * ⚠️ The second guard is empty on the TypeScript path, and saying otherwise
+ * would overstate it: the host name lives in the SDK's DEFAULT_BASE_URL, never
+ * in the published source, so there is no literal there to catch. What covers
+ * that path is the first guard, plus the request count — an example that
+ * silently kept the SDK default reaches the network but leaves the replay with
+ * nothing recorded, and is failed for it rather than scored on its files.
+ *
+ * Contract drift on the other side is caught by re-probing, not by this file.
  */
 import { createServer } from "node:http";
 import { execFile } from "node:child_process";
@@ -62,8 +81,13 @@ const XML_BODY =
   ' xmlns:sh="http://www.unece.org/cefact/namespaces/StandardBusinessDocumentHeader">' +
   "<sh:StandardBusinessDocumentHeader/></sh:StandardBusinessDocument>";
 
-// A minimal but genuine PDF: the byte marker the old examples sniffed for is
-// the first thing an assertion below reads back, so it has to be real.
+// ⚠️ NOT a valid PDF, and it does not need to be — but the comment that used to
+// call it "genuine" was wrong, and a false claim in a fixture is how the next
+// reader ends up trusting it for something it cannot do. There is no xref table
+// and no catalogue; `pdfinfo` refuses it. What matters here is only that it
+// carries the `%PDF-` marker the assertions read back, and that its LENGTH is
+// distinctive: an example that writes a hardcoded `%PDF-` instead of the bytes
+// it received passes a marker check and fails a length check.
 const PDF_BODY = Buffer.from("%PDF-1.7\n%\xE2\xE3\xCF\xD3\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n", "latin1");
 
 const UNAVAILABLE = {
@@ -96,6 +120,25 @@ const NOT_FOUND = {
   body: JSON.stringify({ error: "Invoice not found" }),
 };
 
+// Mirrors VALID_FORMATS in the gateway route. A replay that answers 200 to any
+// string is not a replay of this API: it accepts format names the real one
+// refuses, which is how a published typo stays invisible.
+const VALID_FORMATS = new Set(["pdf", "xml.ubl.invoice.bis3", "xml.facturae.3.2", "original", "payload"]);
+
+const FORMAT_INVALID = {
+  status: 400,
+  headers: {
+    "Content-Type": "application/json",
+    "Getpeppr-Result-Code": "invoices.export_format_invalid",
+    "Getpeppr-Result-Message": "The requested export format is not one this endpoint produces.",
+    "Getpeppr-Remediation": "fix_request",
+    "Getpeppr-Retryable": "false",
+  },
+  body: JSON.stringify({
+    error: 'Invalid format. Valid formats: pdf, xml.ubl.invoice.bis3, xml.facturae.3.2, original, payload',
+  }),
+};
+
 const GUID = "b37ad511-95c4-42a1-a93a-3b347361e0ea";
 
 /**
@@ -103,9 +146,14 @@ const GUID = "b37ad511-95c4-42a1-a93a-3b347361e0ea";
  */
 function startGateway(scenario) {
   // Every path the replay does not recognise is recorded and handed back to the
-  // caller. Without this a mismatch is not an error but a SILENCE: the SDK's
-  // waitFor polled an unmatched 404 for its whole timeout and the run simply
-  // hung, which reads as a slow check rather than a broken one.
+  // caller, so a mismatch names itself instead of being inferred from whatever
+  // the example did next.
+  //
+  // ⚠️ Measured, against the first draft of this comment: an unmatched path does
+  // NOT hang the SDK — `waitFor` calls `getStatus`, which throws on the 404 in
+  // milliseconds. What hangs is an unmatched path answered `200` with a
+  // non-terminal status, where `waitFor` polls until `runCase`'s timeout kills
+  // it. Both cases are diagnosed by this list; only the second is slow.
   const unexpected = [];
   // Which export formats were asked for, in order. Counting them is what
   // separates a fallback keyed on the RESULT CODE from one keyed on the bare
@@ -145,6 +193,13 @@ function startGateway(scenario) {
         // time and earns a second 404; it is caught by the request COUNT, not
         // by the files it left, which are the same either way.
         return send(NOT_FOUND.status, NOT_FOUND.headers, NOT_FOUND.body);
+      }
+      if (!VALID_FORMATS.has(format)) {
+        // The real route rejects an unknown format name before doing anything
+        // else. Answering 200 to any non-pdf string made a typo in a published
+        // format name — `xml.ubl.invoice.bis30` on three surfaces at once —
+        // completely invisible: every example saved its file and passed.
+        return send(FORMAT_INVALID.status, FORMAT_INVALID.headers, FORMAT_INVALID.body);
       }
       if (format === "pdf") {
         return scenario === "pdf_available"
@@ -210,17 +265,26 @@ function pointAtReplay(source, kind, port) {
 // ─── What each example is allowed to leave behind ──────────────────────────
 
 /**
- * `exit`      — 0 means the example must succeed; "nonzero" means it must fail.
- * `xml`       — true when a non-empty .xml file is required (the explicit
- *               second request), false when NO .xml may be produced.
- * `pdf`       — true when a real PDF must be on disk.
+ * `exit`       — 0 means the example must succeed; "nonzero" means it must fail.
+ * `fallbackXml`— the EXACT file the explicit second request must leave behind,
+ *                non-empty. Named, not counted: two of these examples also save
+ *                XML further down in unconditional sections, and an assertion
+ *                phrased as "some .xml exists" was satisfied by those. Deleting
+ *                the fallback entirely — the very regression this repository
+ *                exists to prevent — kept the check green until this field
+ *                replaced it.
+ * `xml`        — true when SOME non-empty .xml is required (used where the
+ *                example writes exactly one), false when NO .xml may be produced.
+ * `pdf`        — true when a real PDF must be on disk.
  * `asRequests` — exact number of /as/{format} requests the example may make.
- *                Only set where the file evidence cannot discriminate.
+ *                Set where the file evidence cannot discriminate on its own.
  *
- * Every scenario also carries one assertion no case can opt out of: no file
- * with a .pdf name may exist unless it starts with %PDF-. That is the defect
- * this check was written for, and it is asserted on the CAUSE (a mislabelled
- * file) rather than on any particular file name.
+ * Every scenario also carries two assertions no case can opt out of: no file
+ * with a .pdf name may exist unless it starts with %PDF-, and the example must
+ * have reached the replay at least once. The first is the defect this check was
+ * written for, asserted on its CAUSE (a mislabelled file) rather than on any
+ * particular name. The second is what stops an example that silently bypassed
+ * the replay from being scored on the files it did not write.
  */
 const CASES = [
   {
@@ -229,7 +293,7 @@ const CASES = [
     file: "examples/typescript/export-invoice.ts",
     expect: {
       pdf_available: { exit: 0, pdf: true },
-      pdf_unavailable: { exit: 0, pdf: false, xml: true },
+      pdf_unavailable: { exit: 0, pdf: false, fallbackXml: "invoice-original.xml" },
       invoice_not_found: { exit: "nonzero", pdf: false, asRequests: 1 },
     },
   },
@@ -239,7 +303,7 @@ const CASES = [
     file: "examples/typescript/invoice-workflow.ts",
     expect: {
       pdf_available: { exit: 0, pdf: true },
-      pdf_unavailable: { exit: 0, pdf: false, xml: true },
+      pdf_unavailable: { exit: 0, pdf: false, fallbackXml: "INV-2026-100-original.xml" },
       invoice_not_found: { exit: "nonzero", pdf: false, asRequests: 1 },
     },
   },
@@ -249,7 +313,7 @@ const CASES = [
     file: "examples/python/export_invoice.py",
     expect: {
       pdf_available: { exit: 0, pdf: true },
-      pdf_unavailable: { exit: 0, pdf: false, xml: true },
+      pdf_unavailable: { exit: 0, pdf: false, fallbackXml: "invoice-original.xml" },
       invoice_not_found: { exit: "nonzero", pdf: false, asRequests: 1 },
     },
   },
@@ -259,7 +323,7 @@ const CASES = [
     file: "examples/python/invoice_workflow.py",
     expect: {
       pdf_available: { exit: 0, pdf: true },
-      pdf_unavailable: { exit: 0, pdf: false, xml: true },
+      pdf_unavailable: { exit: 0, pdf: false, fallbackXml: "INV-2026-100-original.xml" },
       invoice_not_found: { exit: "nonzero", pdf: false, asRequests: 1 },
     },
   },
@@ -319,11 +383,12 @@ assertFound(CASES.length, 7, "export cases (four code examples plus three cURL b
  * Signatures of an example that never ran, as opposed to one that ran and
  * behaved.
  *
- * This exists because the first run of this check reported four Python cases as
- * `ok`: `import requests` raised, the script wrote no file, and "wrote no file"
- * is exactly what two of the three scenarios require. A missing interpreter
- * dependency was therefore INDISTINGUISHABLE from a correct refusal to write —
- * a check whose two possible answers produce the same output measures nothing.
+ * This exists because the first run of this check reported two Python cases as
+ * `ok` for the wrong reason: `import requests` raised, the script wrote no file,
+ * and "wrote no file" is exactly what the `invoice_not_found` scenario requires.
+ * A missing interpreter dependency was therefore INDISTINGUISHABLE from a correct
+ * refusal to write — a check whose two possible answers produce the same output
+ * measures nothing.
  */
 const NEVER_RAN = /ModuleNotFoundError|No module named|Cannot find package|Cannot find module|ERR_MODULE_NOT_FOUND|command not found/;
 
@@ -428,18 +493,42 @@ for (const scenario of SCENARIOS) {
         );
       }
 
-      // The invariant, asserted for every case in every scenario.
+      // The invariant, asserted for every case in every scenario, on BOTH
+      // extensions. A file is refused when its first bytes contradict the name
+      // it was given — that is the defect this check exists for, and it does not
+      // care which name was wrong.
+      //
+      // The .xml half is not symmetry for its own sake: writing `response` where
+      // `fallback` was meant — a one-word slip, the kind review misses — puts the
+      // 404's JSON body into a file called `invoice-original.xml`. Right name,
+      // non-empty, wrong bytes.
       for (const f of files) {
         if (f.ext === ".pdf" && f.head !== "%PDF-") {
           problems.push(`wrote ${safe(f.name)} (${f.size} bytes) but it does not start with %PDF-`);
+        }
+        if (f.ext === ".xml" && !f.head.startsWith("<")) {
+          problems.push(`wrote ${safe(f.name)} (${f.size} bytes) but it does not start with "<" — not XML`);
         }
       }
 
       const exitOk = want.exit === "nonzero" ? result.exit !== 0 : result.exit === 0;
       if (!exitOk) problems.push(`expected exit ${want.exit}, got ${result.exit}`);
 
+      // The saved PDF must be the bytes the replay sent, byte-length included.
+      // Asserted on the length because the marker alone accepts an example that
+      // writes a constant `%PDF-` and never looks at the response at all.
       const realPdfs = files.filter((f) => f.ext === ".pdf" && f.head === "%PDF-");
       if (want.pdf === true && realPdfs.length === 0) problems.push("expected a PDF on disk, found none");
+      if (want.pdf === true) {
+        for (const f of realPdfs) {
+          if (f.size !== PDF_BODY.length) {
+            problems.push(
+              `wrote ${safe(f.name)} with ${f.size} bytes, but the replay sent ${PDF_BODY.length} — ` +
+                `the file is not what came back`,
+            );
+          }
+        }
+      }
       if (want.pdf === false && files.some((f) => f.ext === ".pdf")) {
         problems.push(`expected no .pdf file, found ${files.filter((f) => f.ext === ".pdf").map((f) => safe(f.name)).join(", ")}`);
       }
@@ -455,7 +544,26 @@ for (const scenario of SCENARIOS) {
         );
       }
 
+      // Every example must have reached the replay. Without this, an example
+      // that never talked to it at all — a rewrite that stopped matching, an
+      // SDK that dropped the baseUrl option — is scored on the files it did not
+      // write, and "wrote no .pdf" reads as a pass.
+      if (asked.length === 0) {
+        problems.push("the example made no /as/{format} request — it never reached the replay");
+      }
+
       const xmls = files.filter((f) => f.ext === ".xml" && f.size > 0);
+
+      // Named, not counted. `export-invoice.ts` and `export_invoice.py` also
+      // save XML in unconditional sections further down, so "some .xml exists"
+      // stayed true with the fallback DELETED OUTRIGHT — the exact regression
+      // this repository exists to prevent, passing green on two of seven cases.
+      if (typeof want.fallbackXml === "string" && !xmls.some((f) => f.name === want.fallbackXml)) {
+        problems.push(
+          `expected the explicit XML request to leave a non-empty ${safe(want.fallbackXml)}; produced ` +
+            `${files.map((f) => safe(f.name)).join(", ") || "no files at all"}`,
+        );
+      }
       if (want.xml === true && xmls.length === 0) {
         problems.push("expected the explicit XML request to leave a non-empty .xml file, found none");
       }

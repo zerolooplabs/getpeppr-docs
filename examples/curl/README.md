@@ -140,6 +140,12 @@ Use `/as/payload` for the same document without the SBDH envelope. There is no J
 it, curl writes the JSON error body into the file you named, and you end up holding
 an `.xml` that is not XML.
 
+It covers HTTP errors, and only those. A transfer that dies *after* the first bytes
+arrive still leaves a truncated file behind — on curl 7.83 and later, add
+`--remove-on-error` to have curl delete it. It is left out of the commands above on
+purpose: older curl builds reject the flag outright, which would break the copy for
+the very reader it is meant to protect.
+
 ## Validation
 
 ### Validate an invoice

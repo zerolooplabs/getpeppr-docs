@@ -17,12 +17,20 @@
 #
 # No secret is used and no getpeppr API call is made. `tsc --noEmit`, `bash -n`
 # and `py_compile` parse without executing; `check:export` does execute, but
-# against a replay of the gateway served from 127.0.0.1, and it aborts before
-# running anything if a rewritten copy still mentions api.getpeppr.dev — so it
-# cannot reach the real API even when it is wrong. `npm ci --ignore-scripts` runs
-# no package lifecycle script. The job reaches the network to install from npm
-# and PyPI and to restore the setup-node cache; the CHECKS themselves make one
-# outbound request between them, an anonymous GET of the public OpenAPI spec.
+# against a replay of the gateway served from 127.0.0.1. Three guards keep it
+# there: the URL rewrite throws when it matches nothing, it throws when a literal
+# api.getpeppr.dev survives it, and a case that never reached the replay fails
+# instead of being scored on the files it did not write. (The literal guard is
+# empty on the TypeScript path — the host name lives in the SDK default, not in
+# the source — which is why the third guard exists.) `npm ci --ignore-scripts`
+# runs no package lifecycle script. The job reaches the network to install from
+# npm and PyPI and to restore the setup-node cache; the CHECKS themselves make
+# one outbound request between them, an anonymous GET of the public OpenAPI spec.
+#
+# This job EXECUTES code that a pull request controls. That is safe here and only
+# here because the trigger is `pull_request`, never `pull_request_target`: GitHub
+# passes no secret to the runner for a fork, and the token is read-only. Adding
+# `pull_request_target` would turn every line below into an exfiltration path.
 name: CI
 
 on:
@@ -44,7 +52,7 @@ concurrency:
 
 jobs:
   examples:
-    name: Examples compile and parse
+    name: Examples compile, parse and run
     runs-on: ubuntu-latest
     steps:
       # Actions are pinned to the commit their tag resolved to on 2026-09-04:
@@ -71,17 +79,18 @@ jobs:
       # outright means a pull request cannot introduce one that runs here.
       - run: npm ci --ignore-scripts
 
-      # The Python examples are plain HTTP and need `requests` to RUN. Without
-      # it `check:export` reported four of them green: the script died on the
-      # import, wrote no file, and "wrote no file" is what two of its three
-      # scenarios require. The check now refuses that output, so this step is
-      # part of the check rather than a convenience.
+      # The Python examples are plain HTTP and need their dependencies to RUN.
+      # Without them `check:export` reported TWO of its six Python cases green:
+      # the script died on the import, wrote no file, and "wrote no file" is
+      # exactly what the `invoice_not_found` scenario requires. The check now
+      # refuses that output, so this step is part of the check rather than a
+      # convenience.
       - run: pip install -r examples/python/requirements.txt
 
       # Each check is its own step so a red run names the surface that broke
       # without anyone opening the log, and `if: always()` keeps the later steps
       # running after an earlier failure — one red lane must not hide the state
-      # of the other five.
+      # of the other six.
       - name: TypeScript examples compile against @getpeppr/sdk
         if: always()
         run: npm run check:examples

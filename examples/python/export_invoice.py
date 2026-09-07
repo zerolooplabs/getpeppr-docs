@@ -38,9 +38,11 @@ elif response.headers.get("Getpeppr-Result-Code") == "invoices.export_format_una
         f.write(fallback.content)
     print("No PDF for this document — saved the UBL XML as invoice-original.xml")
 else:
-    # Anything else is not a missing PDF. A 404 for an invoice that does not
-    # exist carries `invoices.not_found`, and asking for its XML would only earn
-    # a second 404.
+    # Fail rather than guess. A 404 for an invoice that does not exist carries
+    # `invoices.not_found`, and asking for its XML would only earn a second 404.
+    # A missing PDF can also land here — a proxy that strips unknown headers
+    # takes the result code away — and that is the trade: raising on a response
+    # we cannot classify is safe, saving a file we cannot name is not.
     response.raise_for_status()
 
 

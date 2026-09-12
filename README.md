@@ -279,10 +279,8 @@ Use `data.receivedDocumentId` as `{id}`. The list accepts `limit`, `offset`, and
 Verify that a recipient is registered on the Peppol network before sending:
 
 ```typescript
-// Non-blocking mode — sends even if recipient not found (omit for no validation)
-const warned = await peppol.invoices.send(data, { validateRecipient: "warn" });
-
-// Strict mode — rejects with 422 if recipient not found
+// Choose one mode per invoice. "strict" rejects an absent recipient with 422.
+// Use "warn" instead for a non-blocking check, or omit it for no Directory check.
 const strict = await peppol.invoices.send(data, { validateRecipient: "strict" });
 ```
 

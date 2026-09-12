@@ -51,9 +51,11 @@ response = requests.get(
 
 if response.status_code == 200:
     buyer = response.json()
-    print(f"Recipient verified: {buyer['name']} — safe to send")
-else:
+    print(f"Recipient found: {buyer['name']}; invoice validation still applies")
+elif response.status_code == 404:
     print(f"Recipient {buyer_peppol_id} is not reachable on Peppol")
+else:
+    response.raise_for_status()
 
 
 # -- Search the Peppol Directory -----------------------------------------------
@@ -65,6 +67,7 @@ response = requests.get(
     headers=HEADERS,
     timeout=30,
 )
+response.raise_for_status()
 data = response.json()
 print(f"Found {data['meta']['total_count']} participants")
 for entry in data["data"]:
@@ -80,19 +83,42 @@ response = requests.get(
     headers=HEADERS,
     timeout=30,
 )
+response.raise_for_status()
 vat_data = response.json()
 print(f"VAT search found {vat_data['meta']['total_count']} results")
 
 
 # -- Pre-send recipient validation ---------------------------------------------
 
-# Strict mode — fails if recipient not on Peppol network
-invoice_data = {"number": "INV-2026-001"}  # ... full invoice payload
+# This sends an invoice when all checks pass. Replace the example recipient and
+# invoice details with your own; use an approved test recipient in sandbox.
+# Strict mode rejects a recipient absent from the Peppol Directory.
+invoice_data = {
+    "number": "INV-2026-001",
+    "buyerReference": "PO-2026-001",
+    "to": {
+        "name": "Globex NV",
+        "peppolId": buyer_peppol_id,
+        "street": "Rue de la Loi 200",
+        "city": "Brussels",
+        "postalCode": "1000",
+        "country": "BE",
+    },
+    "lines": [{"description": "Consulting", "quantity": 1, "unitPrice": 1000, "vatRate": 21}],
+}
 response = requests.post(
     f"{BASE_URL}/v1/invoices",
     json=invoice_data,
     headers={**HEADERS, "x-validate-recipient": "strict"},
     timeout=30,
 )
-if response.status_code == 422:
+if (
+    response.status_code == 422
+    and response.headers.get("Getpeppr-Result-Code") == "invoices.recipient_not_in_directory"
+):
     print("Recipient not found in Peppol Directory")
+else:
+    # Other validation failures, rate limits and authentication errors are not
+    # evidence that a recipient is missing. Preserve those errors for the caller.
+    response.raise_for_status()
+    print(f"Invoice submitted: {response.json()['id']}")

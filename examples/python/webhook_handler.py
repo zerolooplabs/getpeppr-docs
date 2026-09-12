@@ -68,10 +68,10 @@ def handle_webhook() -> Response:
             print(f"Invoice {event['data']['invoiceId']} delivery failed")
         case "invoice.paid":
             print(f"Invoice {event['data']['invoiceId']} was paid")
-        # Not deliverable: no receiving capability found for the recipient on the
-        # Peppol network. Final state for this send — fix the recipient, then re-send.
+        # no_action: no receiving capability; failed: no delivery evidence after 7 days.
+        # Inspect the current invoice status before deciding whether to retry.
         case "invoice.undeliverable":
-            print(f"Invoice {event['data']['invoiceId']} is not deliverable (recipient not found on the network)")
+            print(f"Invoice {event['data']['invoiceId']} is undeliverable (status: {event['data'].get('status')})")
         # Inbound reception (on for every Legal Entity, nothing to enable): a supplier sent
         # a document TO one of your Legal Entities. Delivery is at-least-once —
         # deduplicate on data.receivedDocumentId, the stable idempotency key.

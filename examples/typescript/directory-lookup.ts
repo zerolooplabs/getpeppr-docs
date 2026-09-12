@@ -50,7 +50,7 @@ try {
   throw err;
 }
 
-console.log(`Recipient verified: ${buyer.name} — safe to send`);
+console.log(`Recipient found: ${buyer.name}; invoice validation still applies`);
 
 // ─── Search the Peppol Directory ─────────────────────────────
 
@@ -78,6 +78,7 @@ console.log(`VAT search found ${vatResults.meta.totalCount} results`);
 
 const invoice = {
   number: "INV-2026-001",
+  buyerReference: "PO-2026-001",
   to: {
     name: buyer.name,
     peppolId: buyer.peppolId,
@@ -89,18 +90,20 @@ const invoice = {
   lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
 };
 
-// Non-blocking mode — sends even if recipient not found (no validation by default)
-const result = await peppol.invoices.send(invoice, {
-  validateRecipient: "warn",
-});
-
-// Strict mode — rejects with error if recipient not found
+// This sends one invoice when all checks pass. Replace the example recipient
+// and invoice details; use an approved test recipient in sandbox.
+// Use validateRecipient: "warn" instead for a non-blocking Directory check,
+// or omit it for no Directory check. Choose one mode per invoice.
+// Strict mode rejects a recipient absent from the Peppol Directory.
 try {
   const strictResult = await peppol.invoices.send(invoice, {
     validateRecipient: "strict",
   });
 } catch (err) {
-  if (err instanceof PeppolApiError && err.statusCode === 422) {
-    console.error("Recipient not registered on Peppol network");
+  if (err instanceof PeppolApiError && err.statusCode === 422 &&
+      err.resultCode === "invoices.recipient_not_in_directory") {
+    console.error("Recipient not found in Peppol Directory");
+  } else {
+    throw err;
   }
 }

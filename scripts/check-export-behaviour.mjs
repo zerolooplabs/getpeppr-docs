@@ -6,7 +6,7 @@
  *
  * ## Why this check exists
  *
- * Every other check in this repository PARSES. `check:examples` type-checks,
+ * The compile and parse checks do not execute examples. `check:examples` type-checks,
  * `check:python` byte-compiles, `check:shell` runs `bash -n`. Each of them says
  * so in its own header, and `check-python.mjs` names this exact gap in its list
  * of what it cannot see: "a value written to a file with the wrong extension".

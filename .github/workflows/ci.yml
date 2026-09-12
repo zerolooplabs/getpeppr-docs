@@ -26,6 +26,7 @@
 # runs no package lifecycle script. The job reaches the network to install from
 # npm and PyPI and to restore the setup-node cache; the CHECKS themselves make
 # one outbound request between them, an anonymous GET of the public OpenAPI spec.
+# check:runtime exercises the local webhook and intercepted Python/TypeScript requests.
 #
 # This job EXECUTES code that a pull request controls. That is safe here and only
 # here because the trigger is `pull_request`, never `pull_request_target`: GitHub
@@ -90,7 +91,7 @@ jobs:
       # Each check is its own step so a red run names the surface that broke
       # without anyone opening the log, and `if: always()` keeps the later steps
       # running after an earlier failure — one red lane must not hide the state
-      # of the other six.
+      # of the other checks.
       - name: TypeScript examples compile against @getpeppr/sdk
         if: always()
         run: npm run check:examples
@@ -115,9 +116,12 @@ jobs:
         if: always()
         run: npm run check:routes
 
-      # The only step that RUNS a published example rather than reading it, and
-      # the only one that can see a file saved under a name its contents do not
-      # match. It answers from a local replay, never from the API.
+      # Runs export examples and checks their file names against their contents.
+      # It answers from a local replay, never from the API.
       - name: Export examples behave against a replay of the gateway
         if: always()
         run: npm run check:export
+
+      - name: Webhook and client examples handle runtime responses
+        if: always()
+        run: npm run check:runtime

@@ -20,7 +20,8 @@ const app = express();
 
 app.post(
   "/webhooks/getpeppr",
-  express.raw({ type: "application/json" }),
+  // 512 KB of embedded XML expands in base64; allow room for the JSON envelope.
+  express.raw({ type: "application/json", limit: "1mb" }),
   async (req, res) => {
     const signature = req.headers["getpeppr-signature"] as string;
     const rawBody = req.body.toString("utf-8");
@@ -36,7 +37,7 @@ app.post(
 
     // Process the event. `event.data` is `unknown` on the envelope type —
     // narrow it before reading fields.
-    const data = event.data as { invoiceId?: string; receivedDocumentId?: string };
+    const data = event.data as { invoiceId?: string; receivedDocumentId?: string; status?: string };
     switch (event.type) {
       case "invoice.sent":
         console.log(`Invoice ${data.invoiceId} was delivered to the recipient's access point`);
@@ -58,10 +59,10 @@ app.post(
         console.log(`Invoice ${data.invoiceId} was paid`);
         break;
 
-      // Not deliverable: no receiving capability found for the recipient on the
-      // Peppol network. Final state for this send — fix the recipient, then re-send.
+      // no_action: no receiving capability; failed: no delivery evidence after 7 days.
+      // Inspect the current invoice status before deciding whether to retry.
       case "invoice.undeliverable":
-        console.error(`Invoice ${data.invoiceId} is not deliverable (recipient not found on the network)`);
+        console.error(`Invoice ${data.invoiceId} is undeliverable (status: ${data.status})`);
         break;
 
       // Inbound reception (on for every Legal Entity, nothing to enable): a supplier sent

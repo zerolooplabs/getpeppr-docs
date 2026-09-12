@@ -42,7 +42,7 @@
               {
                 "key": "x-validate-recipient",
                 "value": "warn",
-                "description": "Optional. 'warn' (non-blocking) or 'strict' (rejects if recipient not found). Omit for no validation.",
+                "description": "Optional Directory check. 'warn' is non-blocking; 'strict' rejects an absent recipient with HTTP 422 and Getpeppr-Result-Code: invoices.recipient_not_in_directory. Other 422 responses have different causes. Omit for no Directory check.",
                 "disabled": true
               }
             ],

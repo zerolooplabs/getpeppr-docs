@@ -3,21 +3,22 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Toolchain that compiles, parses or RUNS every published example in this repository. It never calls the getpeppr API and consumes no secret; `check:export` executes the export examples against a local replay of the gateway on 127.0.0.1, and the only outbound request any check makes is an anonymous GET of the public OpenAPI spec.",
+  "description": "Checks published examples by compilation, parsing and runtime scenarios. Export and webhook scenarios use loopback; validation and recipient checks use intercepted HTTP calls. No real credentials or getpeppr API calls are used. The only external request made by the checks fetches the public OpenAPI spec.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zerolooplabs/getpeppr-docs.git"
   },
   "scripts": {
-    "check": "npm run check:examples && npm run check:snippets && npm run check:python && npm run check:shell && npm run check:postman && npm run check:routes && npm run check:export",
+    "check": "npm run check:examples && npm run check:snippets && npm run check:python && npm run check:shell && npm run check:postman && npm run check:routes && npm run check:export && npm run check:runtime",
     "check:examples": "node scripts/check-examples.mjs",
     "check:snippets": "node scripts/check-readme-snippets.mjs",
     "check:python": "node scripts/check-python.mjs",
     "check:shell": "node scripts/check-shell-blocks.mjs",
     "check:postman": "node scripts/check-postman.mjs",
     "check:routes": "node scripts/check-routes.mjs",
-    "check:export": "node scripts/check-export-behaviour.mjs"
+    "check:export": "node scripts/check-export-behaviour.mjs",
+    "check:runtime": "node scripts/check-runtime-examples.mjs"
   },
   "devDependencies": {
     "@getpeppr/sdk": "^5.4.1",

@@ -234,13 +234,13 @@ console.log(event.type); // e.g. "invoice.sent"
 | `invoice.registered` | Cleared by tax authority (e.g., KSA, PT) |
 | `invoice.received` | Receipt acknowledged by recipient |
 | `invoice.paid` | Payment confirmed by recipient |
-| `invoice.undeliverable` | Not deliverable — no receiving capability found for the recipient on the Peppol network (final state for the send; payload carries `status: "no_action"`). Also sent when no delivery evidence has appeared after 7 days |
+| `invoice.undeliverable` | No receiving capability found (`status: "no_action"`), or no delivery evidence after 7 days (`status: "failed"`). The latter is our own timeout policy, not proof that the recipient is absent. Inspect the current invoice status before deciding whether to retry |
 | `invoice.delivery_unconfirmed` | No delivery evidence yet — not a failure; `invoice.sent` follows and supersedes it if delivery is confirmed later |
 | `invoice.partially_paid` | Recipient confirmed a partial payment |
 | `invoice.under_query` | Recipient raised a question about the invoice |
 | `invoice.conditionally_accepted` | Recipient accepted the invoice subject to conditions |
 | `invoice.status_changed` | Generic status notification with the full per-axis state — opt-in, never matched by `*` |
-| `legal_entity.registered` | Platform sub-tenant reached a verified or active state |
+| `legal_entity.registered` | Public receive discovery verified the platform sub-tenant’s SML → SMP → Invoice metadata → active AS4 path. Identity verification alone does not emit it; status is `active`, or `no_registry` for the sandbox registryless test scheme |
 | `legal_entity.verification_failed` | Platform sub-tenant registry verification failed |
 | `legal_entity.unsupported_scheme` | Platform sub-tenant identifier uses a scheme with no automatic validator |
 | `legal_entity.awaiting_authz` | Platform sub-tenant authorisation email is awaiting customer action |
@@ -276,14 +276,24 @@ Use `data.receivedDocumentId` as `{id}`. The list accepts `limit`, `offset`, and
 
 ### Pre-send Recipient Validation
 
-Verify that a recipient is registered on the Peppol network before sending:
+Optionally check the recipient’s presence in the Peppol Directory when sending.
+Directory presence is not proof of network receive readiness.
 
 ```typescript
-// Non-blocking mode — sends even if recipient not found (omit for no validation)
-const warned = await peppol.invoices.send(data, { validateRecipient: "warn" });
+import { PeppolApiError } from "@getpeppr/sdk";
 
-// Strict mode — rejects with 422 if recipient not found
-const strict = await peppol.invoices.send(data, { validateRecipient: "strict" });
+// Choose one mode per invoice. Use "warn" instead for a non-blocking Directory
+// check, or omit the option for no Directory check. This sends when checks pass.
+try {
+  const strict = await peppol.invoices.send(data, { validateRecipient: "strict" });
+} catch (err) {
+  if (err instanceof PeppolApiError &&
+      err.resultCode === "invoices.recipient_not_in_directory") {
+    console.error("Recipient not found in Peppol Directory");
+  } else {
+    throw err; // Other validation, authentication and rate-limit failures.
+  }
+}
 ```
 
 Also available via the `x-validate-recipient` header in REST calls.
@@ -344,7 +354,7 @@ To run the same checks locally:
 
 ```bash
 npm ci
-pip install -r examples/python/requirements.txt   # check:export runs the Python examples
+pip install -r examples/python/requirements.txt   # required to run the export examples
 npm run check
 ```
 
@@ -356,35 +366,40 @@ npm run check
 | `npm run check:shell` | every `bash` block in the Markdown files parses (`bash -n`) |
 | `npm run check:postman` | the Postman collection parses, declares the Collection v2.1 schema, every request has a method and a URL, and nothing in it carries a script |
 | `npm run check:routes` | every mentioned `/v1/…` path exists in the published OpenAPI spec, and its method too wherever the mention states one |
-| `npm run check:export` | the export examples, **executed** against a local replay of the gateway, save exactly the bytes the replay returned when a PDF exists, and never write an error body under a `.pdf` or `.xml` name |
+| `npm run check:export` | the export examples, **executed** against a local replay of the gateway, check the PDF marker and byte length, and never write an error body under a `.pdf` or `.xml` name |
+| `npm run check:runtime` | the Express webhook accepts a signed inbound payload with 512 KB of embedded XML, rejects invalid signatures and oversized bodies; Python validation and the Python/TypeScript strict-recipient examples (including this README’s snippet) handle replayed success and error responses |
 
-Each sweep also asserts a minimum count, so a check that finds nothing left to
-check fails rather than passing green.
+The discovery sweeps also assert a minimum count, so an empty set of examples
+fails rather than passing green. Runtime checks name the scenarios they execute.
 
 ### What these checks do not prove
 
-All but one of them parse and type-check without executing, so a syntactically
+The compile and parse checks do not execute examples, so a syntactically
 valid example that is wrong at runtime still passes: a misspelled response field,
 a request body that is not valid JSON, a `curl` flag that does not exist.
 `check:routes` covers the URLs and their methods; the field-level half is
-uncovered outside the export path, and finding it still takes a human reading the
-examples against the API.
+covered only by the runtime scenarios described below, and other behaviour still
+needs review against the API.
 
-`check:export` is the exception, and it is narrow on purpose. It **runs** the
-export examples — the four TypeScript and Python files and the three `curl`
+`check:export` **runs** the export examples — the four TypeScript and Python files and the three `curl`
 blocks — against a local replay of the gateway, in three scenarios: a PDF exists,
 no PDF exists, the invoice is unknown. It refuses a file whose name its contents
 contradict, and requires the explicit XML request to leave the file it promises.
 It says nothing about any other example, and nothing about whether the gateway
 still answers the way the replay says it does.
 
-No check calls the getpeppr API, and none needs a key. Between them the checks
-make one outbound network request, an anonymous `GET` of the public OpenAPI spec
+`check:runtime` executes the Express webhook locally and the Python validation
+and Python/TypeScript directory examples, including this README’s recipient-check
+snippet, with intercepted HTTP calls. Its response fixtures check
+client behaviour; they do not prove live validation or delivery on Peppol.
+
+No check calls the getpeppr API, and none needs a real API key or webhook secret.
+Between them the checks make one outbound network request, an anonymous `GET` of the public OpenAPI spec
 — `check:routes` fails if that URL answers `4xx`, because then the spec is not
 where we say it is, and skips with a warning on a timeout or a `5xx`, which is
 the upstream's problem and has its own monitor. `check:export` talks only to a
-server it starts on `127.0.0.1`. (Installing the toolchain, of course, reaches
-npm and PyPI.)
+server it starts on `127.0.0.1`; the webhook runtime check also uses loopback.
+(Installing the toolchain, of course, reaches npm and PyPI.)
 
 ## License
 

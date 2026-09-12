@@ -36,11 +36,10 @@ response = requests.post(
 response.raise_for_status()
 result = response.json()
 
-if not result.get("valid"):
-    for error in result.get("errors", []):
-        print(f"[{error['field']}] {error['message']}")
-        if error.get("suggestion"):
-            print(f"  Tip: {error['suggestion']}")
-
-for warning in result.get("warnings", []):
-    print(f"Warning: [{warning['field']}] {warning['message']}")
+# /validate returns errors as strings and checks required fields only.
+# Use /validate/server for gateway-side UBL and business-rule checks.
+if not result["valid"]:
+    for error in result["errors"]:
+        print(f"Validation error: {error}")
+else:
+    print("Required fields are present; this does not prove Peppol sendability.")

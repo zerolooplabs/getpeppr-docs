@@ -26,7 +26,7 @@
 # runs no package lifecycle script. The job reaches the network to install from
 # npm and PyPI and to restore the setup-node cache; the CHECKS themselves make
 # one outbound request between them, an anonymous GET of the public OpenAPI spec.
-# check:runtime exercises the local webhook and intercepted Python requests.
+# check:runtime exercises the local webhook and intercepted Python/TypeScript requests.
 #
 # This job EXECUTES code that a pull request controls. That is safe here and only
 # here because the trigger is `pull_request`, never `pull_request_target`: GitHub
@@ -122,6 +122,6 @@ jobs:
         if: always()
         run: npm run check:export
 
-      - name: Webhook and Python examples handle runtime responses
+      - name: Webhook and client examples handle runtime responses
         if: always()
         run: npm run check:runtime

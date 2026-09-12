@@ -347,6 +347,9 @@ curl -X GET "https://api.getpeppr.dev/v1/directory/search?vatNumber=BE0685660237
 
 ### Pre-send recipient validation
 
+Choose one mode per invoice; both commands send when their checks pass.
+These options check the Peppol Directory, not public network receive readiness.
+
 Warn mode (non-blocking):
 
 ```bash
@@ -357,7 +360,9 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
   -d @invoice.json
 ```
 
-Strict mode (rejects if recipient not found):
+Strict mode rejects a recipient absent from the Directory with HTTP 422 and
+`Getpeppr-Result-Code: invoices.recipient_not_in_directory`. Other 422 responses
+are different validation failures:
 
 ```bash
 curl -X POST https://api.getpeppr.dev/v1/invoices \

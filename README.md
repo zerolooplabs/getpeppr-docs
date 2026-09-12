@@ -276,12 +276,24 @@ Use `data.receivedDocumentId` as `{id}`. The list accepts `limit`, `offset`, and
 
 ### Pre-send Recipient Validation
 
-Verify that a recipient is registered on the Peppol network before sending:
+Optionally check the recipient’s presence in the Peppol Directory when sending.
+Directory presence is not proof of network receive readiness.
 
 ```typescript
-// Choose one mode per invoice. "strict" rejects an absent recipient with 422.
-// Use "warn" instead for a non-blocking check, or omit it for no Directory check.
-const strict = await peppol.invoices.send(data, { validateRecipient: "strict" });
+import { PeppolApiError } from "@getpeppr/sdk";
+
+// Choose one mode per invoice. Use "warn" instead for a non-blocking Directory
+// check, or omit the option for no Directory check. This sends when checks pass.
+try {
+  const strict = await peppol.invoices.send(data, { validateRecipient: "strict" });
+} catch (err) {
+  if (err instanceof PeppolApiError &&
+      err.resultCode === "invoices.recipient_not_in_directory") {
+    console.error("Recipient not found in Peppol Directory");
+  } else {
+    throw err; // Other validation, authentication and rate-limit failures.
+  }
+}
 ```
 
 Also available via the `x-validate-recipient` header in REST calls.
@@ -355,7 +367,7 @@ npm run check
 | `npm run check:postman` | the Postman collection parses, declares the Collection v2.1 schema, every request has a method and a URL, and nothing in it carries a script |
 | `npm run check:routes` | every mentioned `/v1/…` path exists in the published OpenAPI spec, and its method too wherever the mention states one |
 | `npm run check:export` | the export examples, **executed** against a local replay of the gateway, check the PDF marker and byte length, and never write an error body under a `.pdf` or `.xml` name |
-| `npm run check:runtime` | the Express webhook accepts a signed inbound payload with 512 KB of embedded XML, rejects invalid signatures and oversized bodies; Python validation and Python/TypeScript strict-recipient examples handle replayed success and error responses |
+| `npm run check:runtime` | the Express webhook accepts a signed inbound payload with 512 KB of embedded XML, rejects invalid signatures and oversized bodies; Python validation and the Python/TypeScript strict-recipient examples (including this README’s snippet) handle replayed success and error responses |
 
 The discovery sweeps also assert a minimum count, so an empty set of examples
 fails rather than passing green. Runtime checks name the scenarios they execute.
@@ -377,7 +389,8 @@ It says nothing about any other example, and nothing about whether the gateway
 still answers the way the replay says it does.
 
 `check:runtime` executes the Express webhook locally and the Python validation
-and Python/TypeScript directory examples with intercepted HTTP calls. Its response fixtures check
+and Python/TypeScript directory examples, including this README’s recipient-check
+snippet, with intercepted HTTP calls. Its response fixtures check
 client behaviour; they do not prove live validation or delivery on Peppol.
 
 No check calls the getpeppr API, and none needs a real API key or webhook secret.

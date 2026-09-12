@@ -1,5 +1,6 @@
 /**
- * Execute the published webhook and Python examples against local fixtures.
+ * Execute published webhook, Python and TypeScript directory examples, including
+ * the README pre-send snippet, against local fixtures.
  * Fixtures follow the API contract inspected on 2026-09-12: validation errors
  * are strings; strict recipient rejection has a specific result-code header;
  * inbound XML may contain 512 KiB before base64 encoding. This catches example
@@ -12,6 +13,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
+import { fencedBlocks } from "./lib/markdown.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const work = mkdtempSync(join(root, ".tmp-runtime-"));
@@ -185,9 +187,22 @@ const strictScenarios = {
   missing_code: [422, ""],
   success: [201, "invoices.submitted"],
 };
-async function checkTypeScriptDirectory(scenario) {
-  const source = readFileSync(join(root, "examples/typescript/directory-lookup.ts"), "utf8");
-  const entry = join(work, `directory-${scenario}.mjs`);
+async function checkTypeScriptDirectory(scenario, sourceKind = "example") {
+  let source;
+  if (sourceKind === "readme") {
+    const blocks = fencedBlocks(join(root, "README.md"), "typescript")
+      .filter(({ code }) => code.includes("validateRecipient"));
+    assert.equal(blocks.length, 1, "exactly one README pre-send snippet must execute");
+    source = `import { Peppol } from "@getpeppr/sdk";
+      const peppol = new Peppol({ apiKey: "sk_sandbox_runtime_fixture" });
+      const data = {
+        number: "INV-FIXTURE-001", buyerReference: "PO-FIXTURE-001",
+        to: { name: "Fixture NV", peppolId: "0208:BE0987654321",
+          street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
+        lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
+      };\n${blocks[0].code}`;
+  } else source = readFileSync(join(root, "examples/typescript/directory-lookup.ts"), "utf8");
+  const entry = join(work, `directory-${sourceKind}-${scenario}.mjs`);
   writeFileSync(entry, ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
   }).outputText);
@@ -257,6 +272,7 @@ try {
       }
     });
     await check(`TypeScript strict recipient: ${scenario}`, () => checkTypeScriptDirectory(scenario));
+    await check(`README strict recipient: ${scenario}`, () => checkTypeScriptDirectory(scenario, "readme"));
   }
 } finally {
   rmSync(work, { recursive: true, force: true });

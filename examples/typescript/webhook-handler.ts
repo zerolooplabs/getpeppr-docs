@@ -37,7 +37,14 @@ app.post(
 
     // Process the event. `event.data` is `unknown` on the envelope type —
     // narrow it before reading fields.
-    const data = event.data as { invoiceId?: string; receivedDocumentId?: string; status?: string };
+    const data = event.data as {
+      invoiceId?: string;
+      receivedDocumentId?: string;
+      undeliverableDocumentId?: string;
+      providerDocumentId?: string;
+      reason?: string;
+      status?: string;
+    };
     switch (event.type) {
       case "invoice.sent":
         console.log(`Invoice ${data.invoiceId} was delivered to the recipient's access point`);
@@ -74,6 +81,14 @@ app.post(
 
       case "inbound.creditnote.received":
         console.log(`Received a credit note (${data.receivedDocumentId}) from the Peppol network`);
+        break;
+
+      // A document sent to you arrived but could not be delivered (reason: too_large or
+      // legal_entity_unresolved). An endpoint subscribed to the reception events receives
+      // it without subscribing to it. There is nothing to fetch: deduplicate on
+      // data.undeliverableDocumentId and quote data.providerDocumentId to support.
+      case "inbound.document.undeliverable":
+        console.error(`A received document could not be delivered (${data.reason}, reference ${data.providerDocumentId})`);
         break;
 
       default:

@@ -21,7 +21,7 @@
     "check:runtime": "node scripts/check-runtime-examples.mjs"
   },
   "devDependencies": {
-    "@getpeppr/sdk": "^5.4.1",
+    "@getpeppr/sdk": "^5.5.0",
     "@types/express": "^5.0.0",
     "@types/node": "^26.4.0",
     "express": "^5.0.0",

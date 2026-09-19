@@ -12,7 +12,7 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_abc123..." });
 
 const contact = await peppol.contacts.create({
   name: "Wayne Enterprises NV",
-  peppolId: "0208:BE0123456789",
+  peppolId: "9925:BE0123456789",
   vatNumber: "BE0123456789",
   country: "BE",
   city: "Gotham",

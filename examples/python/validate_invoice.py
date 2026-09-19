@@ -15,7 +15,7 @@ response = requests.post(
         "number": "INV-2026-042",
         "to": {
             "name": "Globex NV",
-            "peppolId": "0208:BE0987654321",
+            "peppolId": "9925:BE0987654321",
             "street": "Rue de la Loi 200",
             "city": "Brussels",
             "postalCode": "1000",

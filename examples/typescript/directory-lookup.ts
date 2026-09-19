@@ -10,13 +10,13 @@ import { Peppol, PeppolApiError } from "@getpeppr/sdk";
 const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
 // ── Lookup by Peppol ID ───────────────────────────────────
-// scheme 0208 = Belgian KBO/BCE number
+// scheme 9925 = Belgian VAT number
 
 // lookup() THROWS a PeppolApiError with statusCode 404 when the participant is
 // not on the network — it never resolves to null.
 let participant;
 try {
-  participant = await peppol.directory.lookup("0208:BE0123456789");
+  participant = await peppol.directory.lookup("9925:BE0314595348");
 } catch (err) {
   if (!(err instanceof PeppolApiError && err.statusCode === 404)) throw err;
 }
@@ -38,7 +38,7 @@ if (participant) {
 // ── Verify before sending ─────────────────────────────────
 // Common pattern: check the recipient exists before creating an invoice
 
-const buyerPeppolId = "0208:BE0987654321";
+const buyerPeppolId = "9925:BE0987654321";
 
 let buyer;
 try {

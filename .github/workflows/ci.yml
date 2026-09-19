@@ -96,6 +96,10 @@ jobs:
         if: always()
         run: npm run check:examples
 
+      - name: Every published Peppol identifier validates against the SDK
+        if: always()
+        run: npm run check:peppol-ids
+
       - name: Markdown TypeScript fragments compile
         if: always()
         run: npm run check:snippets

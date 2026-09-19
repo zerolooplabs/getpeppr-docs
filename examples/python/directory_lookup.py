@@ -1,4 +1,9 @@
-"""Peppol directory lookup — check if a business is on the Peppol network."""
+"""Peppol directory lookup — check if a business is on the Peppol network.
+
+GET /v1/directory/{scheme}/{id} answers {"participant": {...}} — the participant
+is nested, not the top-level object. The TypeScript example reads the participant
+directly because the SDK unwraps it; raw HTTP, as used here, does not.
+"""
 
 import requests
 
@@ -8,16 +13,16 @@ API_KEY = "sk_sandbox_abc123..."
 HEADERS = {"Authorization": f"Bearer {API_KEY}"}
 
 
-# -- Lookup by Peppol ID (scheme 0208 = Belgian KBO/BCE) ---------------------
+# -- Lookup by Peppol ID (scheme 9925 = Belgian VAT) ---------------------
 
 response = requests.get(
-    f"{BASE_URL}/v1/directory/0208/BE0123456789",
+    f"{BASE_URL}/v1/directory/9925/BE0314595348",
     headers=HEADERS,
     timeout=30,
 )
 
 if response.status_code == 200:
-    participant = response.json()
+    participant = response.json()["participant"]
     print(f"Found: {participant['name']}")
     print(f"Country: {participant['country']}")
     print(f"Capabilities: {', '.join(participant['capabilities'])}")
@@ -40,7 +45,7 @@ else:
 
 # -- Verify before sending ---------------------------------------------------
 
-buyer_peppol_id = "0208:BE0987654321"
+buyer_peppol_id = "9925:BE0987654321"
 scheme, identifier = buyer_peppol_id.split(":")
 
 response = requests.get(
@@ -50,7 +55,7 @@ response = requests.get(
 )
 
 if response.status_code == 200:
-    buyer = response.json()
+    buyer = response.json()["participant"]
     print(f"Recipient found: {buyer['name']}; invoice validation still applies")
 elif response.status_code == 404:
     print(f"Recipient {buyer_peppol_id} is not reachable on Peppol")

@@ -128,7 +128,10 @@ def get(url, **kwargs):
     assert url.startswith("https://api.getpeppr.dev/v1/directory/")
     if url.endswith("/search"):
         return Response(200, {"meta": {"total_count": 0}, "data": []})
-    return Response(200, {"name": "Fixture NV", "country": "BE", "capabilities": ["invoice"]})
+    # GET /v1/directory/{scheme}/{id} answers {"participant": {...}} in production
+    # (measured 2026-09-19). A replay that drops the envelope makes a raw-HTTP
+    # example that reads the top level look correct — GPR-1347.
+    return Response(200, {"participant": {"name": "Fixture NV", "country": "BE", "capabilities": ["invoice"]}})
 def post(url, **kwargs):
     calls.append({"method": "POST", "url": url, **kwargs})
     if url.endswith("/validate"):
@@ -214,8 +217,12 @@ async function checkTypeScriptDirectory(scenario, sourceKind = "example") {
     assert.ok(String(url).startsWith("https://api.getpeppr.dev/v1/"));
     const path = new URL(url).pathname;
     if (options.method === "GET" && path.startsWith("/v1/directory/")) {
+      // Same envelope as production. The SDK unwraps it, which is why the
+      // TypeScript example reads the participant directly — GPR-1347.
       return Response.json(path.endsWith("/search") ? { data: [], meta: { total_count: 0 } } : {
-        name: "Fixture NV", peppolId: "0208:BE0987654321", country: "BE", capabilities: ["invoice"],
+        participant: {
+          name: "Fixture NV", peppolId: "9925:BE0987654321", country: "BE", capabilities: ["invoice"],
+        },
       });
     }
     assert.equal(options.method, "POST");

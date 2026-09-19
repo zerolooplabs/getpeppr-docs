@@ -39,11 +39,34 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
  * the identifier is required to carry a digit after an optional two-letter
  * country prefix, which is what keeps `INV-2026-001` and a clock reading out
  * of the sweep without maintaining a list of things to ignore.
+ *
+ * The identifier also has a floor of six characters. Without it a date like
+ * `2026:09-19` matches, and — because the SDK answers `valid: true` for a
+ * scheme it does not know — it would pad the anti-vacuity counters below with
+ * something that is not an identifier at all. Every real participant id is
+ * longer than that: `BE0314595348` is twelve, `0685660237` is ten.
  */
-const COLON_FORM = /\b(\d{4}):([A-Za-z]{0,2}\d[A-Za-z0-9._-]{3,})\b/g;
+const COLON_FORM = /\b(\d{4}):([A-Za-z]{0,2}\d[A-Za-z0-9._-]{5,})\b/g;
 
 /** The same pair as a URL path: /v1/directory/<scheme>/<id> */
-const PATH_FORM = /\/v1\/directory\/(\d{4})\/([A-Za-z]{0,2}\d[A-Za-z0-9._-]{3,})\b/g;
+const PATH_FORM = /\/v1\/directory\/(\d{4})\/([A-Za-z]{0,2}\d[A-Za-z0-9._-]{5,})\b/g;
+
+/**
+ * What this check cannot see, stated rather than implied.
+ *
+ * It reads text, so an identifier assembled at runtime — `"0208:" + id`, a
+ * scheme passed as its own argument, a shell variable — produces no match.
+ * Resolving those needs an evaluator, not a sweep. The per-surface minimums
+ * below are the mitigation: they cannot spot a built identifier, but they do
+ * refuse to stay green while a whole surface stops declaring any.
+ */
+const SURFACES = [
+  { key: "readme", label: "README.md", minimum: 2, match: (p) => p === "README.md" },
+  { key: "typescript", label: "TypeScript examples", minimum: 8, match: (p) => p.startsWith("examples/typescript") },
+  { key: "python", label: "Python examples", minimum: 7, match: (p) => p.startsWith("examples/python") },
+  { key: "curl", label: "curl/Markdown examples", minimum: 6, match: (p) => p.startsWith("examples/curl") },
+  { key: "postman", label: "Postman collection", minimum: 4, match: (p) => p.startsWith("postman") },
+];
 
 const files = [
   join(root, "README.md"),
@@ -94,7 +117,20 @@ for (const file of findFiles(join(root, "postman"), /\.json$/)) {
   walk(collection.item);
 }
 
-assertFound(found.length, 25, "published Peppol identifiers");
+/**
+ * Per surface, not one global floor. A single minimum of 25 over 40 findings
+ * stays green after every TypeScript example stops declaring an identifier —
+ * eleven of them — which is the exact shape of blindness this repository keeps
+ * re-learning: a check written across surfaces, asserted on only one number.
+ *
+ * `scripts/` carries no minimum on purpose. It is swept so a wrong identifier
+ * there cannot hide, but its fixtures are free to stop mentioning one.
+ */
+for (const surface of SURFACES) {
+  const count = found.filter((f) => surface.match(f.where.split(":")[0].split(" ")[0])).length;
+  assertFound(count, surface.minimum, `published Peppol identifiers in ${surface.label}`);
+}
+assertFound(found.length, 30, "published Peppol identifiers");
 
 const failures = [];
 const seen = new Set();

@@ -78,7 +78,7 @@ function normalise(raw, literal = false) {
   if (!path.startsWith("/v1/")) return null;
   path = path.slice(3); // spec paths are relative to the /v1 server URL
 
-  // The colon form of a participant id: `/v1/directory/0208:BE0456789012`.
+  // The colon form of a participant id: `/v1/directory/<scheme>:<id>`.
   // The spec declares one path key, `/directory/{scheme}/{participantId}`, but
   // its own description documents both forms, and a sandbox probe on
   // 2026-09-04 confirmed the colon form reaches the handler and resolves to the

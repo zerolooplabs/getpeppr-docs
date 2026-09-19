@@ -3,10 +3,10 @@
  * that ships in @getpeppr/sdk — the same call an integrator's first line of
  * code makes.
  *
- * Why this check exists (GPR-1347). Thirty published locations taught
- * `0208:BE0123456789` as a Belgian Peppol ID. Scheme 0208 is the Belgian
- * enterprise number: ten bare digits, never prefixed `BE`. That prefix belongs
- * to 9925, the VAT scheme. Our own SDK answered
+ * Why this check exists (GPR-1347). Thirty published locations taught scheme
+ * 0208 with a `BE`-prefixed VAT number as a Belgian Peppol ID. 0208 is the
+ * Belgian enterprise number: ten bare digits, never prefixed `BE`. That prefix
+ * belongs to 9925, the VAT scheme. Our own SDK answered
  * `{"valid":false,"error":"Format mismatch: expected 10 digits."}` — so an
  * example copied verbatim was rejected before it ever reached the network.
  *
@@ -18,6 +18,13 @@
  * The sweep covers all four client forms — TypeScript, Python, shell/Markdown
  * and the Postman collection — because the defect spanned all four, and a lock
  * written for one of them is the reason the other three drift unnoticed.
+ *
+ * It covers `scripts/` too. The first pass of GPR-1347 left two wrong
+ * identifiers in a replay fixture, and exempting the directory that holds the
+ * checks would have made them permanently invisible to the one check written to
+ * find them. Nothing here is exempt, which is why the comments above describe
+ * the bad identifiers instead of quoting them: a citation this sweep cannot
+ * tell apart from a claim is a citation that has to be written differently.
  */
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -35,13 +42,14 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
  */
 const COLON_FORM = /\b(\d{4}):([A-Za-z]{0,2}\d[A-Za-z0-9._-]{3,})\b/g;
 
-/** The same pair as a URL path: /v1/directory/0208/BE0123456789 */
+/** The same pair as a URL path: /v1/directory/<scheme>/<id> */
 const PATH_FORM = /\/v1\/directory\/(\d{4})\/([A-Za-z]{0,2}\d[A-Za-z0-9._-]{3,})\b/g;
 
 const files = [
   join(root, "README.md"),
   ...findFiles(join(root, "examples"), /\.(ts|py|md)$/),
   ...findFiles(join(root, "postman"), /\.json$/),
+  ...findFiles(join(root, "scripts"), /\.mjs$/),
 ];
 
 /** @type {{scheme: string, id: string, where: string}[]} */

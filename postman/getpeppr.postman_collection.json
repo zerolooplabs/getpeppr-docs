@@ -58,7 +58,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"9925:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
             }
           }
         },
@@ -84,7 +84,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"number\": \"CN-2026-001\",\n  \"isCreditNote\": true,\n  \"invoiceReference\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting — refund\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+              "raw": "{\n  \"number\": \"CN-2026-001\",\n  \"isCreditNote\": true,\n  \"invoiceReference\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"9925:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting — refund\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
             }
           }
         },
@@ -233,7 +233,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Globex NV\",\n  \"peppolId\": \"0208:BE0987654321\",\n  \"country\": \"BE\",\n  \"email\": \"billing@globex.be\"\n}"
+              "raw": "{\n  \"name\": \"Globex NV\",\n  \"peppolId\": \"9925:BE0987654321\",\n  \"country\": \"BE\",\n  \"email\": \"billing@globex.be\"\n}"
             }
           }
         },
@@ -504,11 +504,11 @@
               "variable": [
                 {
                   "key": "scheme",
-                  "value": "0208"
+                  "value": "9925"
                 },
                 {
                   "key": "id",
-                  "value": "BE0456789012"
+                  "value": "BE0314595348"
                 }
               ]
             }
@@ -594,7 +594,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"9925:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
             }
           }
         },
@@ -621,7 +621,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"0208:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"9925:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
             }
           }
         }
@@ -773,6 +773,12 @@
                 "v1",
                 "received-documents",
                 ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "3f1c9a8e-5b21-4e77-9d43-8c0a6e2f4b15"
+                }
               ]
             },
             "description": "One received document with its metadata."
@@ -795,6 +801,12 @@
                 ":id",
                 "as",
                 "xml"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "3f1c9a8e-5b21-4e77-9d43-8c0a6e2f4b15"
+                }
               ]
             },
             "description": "The UBL XML exactly as it arrived."

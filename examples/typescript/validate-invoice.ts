@@ -7,7 +7,7 @@ const result = peppol.validate({
   number: "INV-2026-042",
   to: {
     name: "Globex NV",
-    peppolId: "0208:BE0987654321",
+    peppolId: "9925:BE0987654321",
     street: "Rue de la Loi 200",
     city: "Brussels",
     postalCode: "1000",
@@ -39,7 +39,7 @@ const serverResult = await peppol.invoices.validateServer({
   number: "INV-2026-043",
   to: {
     name: "Globex NV",
-    peppolId: "0208:BE0987654321",
+    peppolId: "9925:BE0987654321",
     street: "Rue de la Loi 200",
     city: "Brussels",
     postalCode: "1000",

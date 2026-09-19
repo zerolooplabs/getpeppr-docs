@@ -25,7 +25,7 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
 const invoice = await peppol.invoices.send({
   number: "INV-2026-001",
-  to: { name: "Globex NV", peppolId: "0208:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
+  to: { name: "Globex NV", peppolId: "9925:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
   lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
 });
 
@@ -42,7 +42,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
     "number": "INV-2026-001",
     "to": {
       "name": "Globex NV",
-      "peppolId": "0208:BE0987654321",
+      "peppolId": "9925:BE0987654321",
       "street": "Rue de la Loi 200",
       "city": "Brussels",
       "postalCode": "1000",
@@ -70,7 +70,7 @@ getpeppr login --key sk_sandbox_abc123... --sandbox
 getpeppr send invoice.json --watch
 
 # Or synthesize a quick test invoice from flags
-getpeppr send --to 0208:BE0987654321 --amount 1000 --desc "Consulting"
+getpeppr send --to 9925:BE0987654321 --amount 1000 --desc "Consulting"
 ```
 
 The CLI also handles offline validation (`getpeppr validate`), scaffolding (`getpeppr init`), UBL conversion (`getpeppr convert`), and Peppol Directory lookups (`getpeppr lookup`).

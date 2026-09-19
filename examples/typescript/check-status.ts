@@ -5,7 +5,7 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 // Send an invoice
 const result = await peppol.invoices.send({
   number: "INV-2026-050",
-  to: { name: "Globex NV", peppolId: "0208:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
+  to: { name: "Globex NV", peppolId: "9925:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
   lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
 });
 console.log(result.status); // "submitted"

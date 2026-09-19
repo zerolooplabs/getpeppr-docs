@@ -18,7 +18,7 @@ response = requests.post(
     headers=HEADERS,
     json={
         "name": "Wayne Enterprises NV",
-        "peppolId": "0208:BE0123456789",
+        "peppolId": "9925:BE0123456789",
         "vatNumber": "BE0123456789",
         "country": "BE",
         "city": "Gotham",
@@ -47,7 +47,7 @@ response.raise_for_status()
 result = response.json()
 
 print(f"Found {result['meta']['total_count']} contacts")
-for c in result["data"]:
+for c in result["contacts"]:
     print(f"  {c['id']}: {c['name']} ({c.get('peppolId', 'N/A')})")
 
 

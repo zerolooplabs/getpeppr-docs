@@ -14,7 +14,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
     "number": "INV-2026-001",
     "to": {
       "name": "Globex NV",
-      "peppolId": "0208:BE0987654321",
+      "peppolId": "9925:BE0987654321",
       "street": "Rue de la Loi 200",
       "city": "Brussels",
       "postalCode": "1000",
@@ -75,7 +75,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
     "invoiceReference": "INV-2026-001",
     "to": {
       "name": "Globex NV",
-      "peppolId": "0208:BE0987654321",
+      "peppolId": "9925:BE0987654321",
       "street": "Rue de la Loi 200",
       "city": "Brussels",
       "postalCode": "1000",
@@ -100,7 +100,7 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
     "number": "INV-2026-050",
     "to": {
       "name": "Globex NV",
-      "peppolId": "0208:BE0987654321",
+      "peppolId": "9925:BE0987654321",
       "street": "Rue de la Loi 200",
       "city": "Brussels",
       "postalCode": "1000",
@@ -158,7 +158,7 @@ curl -X POST https://api.getpeppr.dev/v1/validate \
     "number": "INV-2026-001",
     "to": {
       "name": "Globex NV",
-      "peppolId": "0208:BE0987654321",
+      "peppolId": "9925:BE0987654321",
       "street": "Rue de la Loi 200",
       "city": "Brussels",
       "postalCode": "1000",
@@ -187,7 +187,7 @@ curl -X POST https://api.getpeppr.dev/v1/validate/server \
     "number": "INV-2026-001",
     "to": {
       "name": "Globex NV",
-      "peppolId": "0208:BE0987654321",
+      "peppolId": "9925:BE0987654321",
       "street": "Rue de la Loi 200",
       "city": "Brussels",
       "postalCode": "1000",
@@ -219,7 +219,7 @@ curl -X POST https://api.getpeppr.dev/v1/contacts \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Globex NV",
-    "peppolId": "0208:BE0987654321",
+    "peppolId": "9925:BE0987654321",
     "country": "BE",
     "email": "billing@globex.be"
   }'
@@ -318,14 +318,14 @@ the Peppol access point, and the only configured one is `peppol`.
 ### Lookup a Peppol participant
 
 ```bash
-curl https://api.getpeppr.dev/v1/directory/0208/BE0456789012 \
+curl https://api.getpeppr.dev/v1/directory/9925/BE0314595348 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 
 ### Lookup with colon format
 
 ```bash
-curl https://api.getpeppr.dev/v1/directory/0208:BE0456789012 \
+curl https://api.getpeppr.dev/v1/directory/9925:BE0314595348 \
   -H "Authorization: Bearer sk_sandbox_abc123..."
 ```
 

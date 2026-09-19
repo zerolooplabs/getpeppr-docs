@@ -1,6 +1,11 @@
 """List your sent invoices via the getpeppr API.
 
 Note: GET /v1/invoices returns outbound submissions only (invoices you sent).
+
+The response shape is {"invoices": [...], "meta": {...}}. Items carry
+"invoiceNumber" (not "number"); "meta" uses snake_case ("total_count").
+The TypeScript example reads page.data / invoice.number because the SDK maps
+those names — raw HTTP, as used here, does not.
 """
 
 import requests
@@ -18,7 +23,7 @@ response = requests.get(
 response.raise_for_status()
 result = response.json()
 
-print(f"Total invoices: {result['meta']['total_count']} (showing {len(result['data'])})")
+print(f"Total invoices: {result['meta']['total_count']} (showing {len(result['invoices'])})")
 
-for invoice in result["data"]:
-    print(f"  {invoice['id']}: {invoice['number']} — {invoice['status']}")
+for invoice in result["invoices"]:
+    print(f"  {invoice['id']}: {invoice['invoiceNumber']} — {invoice['status']}")

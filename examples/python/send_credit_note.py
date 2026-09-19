@@ -22,7 +22,7 @@ response = requests.post(
         "invoiceReference": "INV-2026-042",
         "to": {
             "name": "Wayne Enterprises NV",
-            "peppolId": "0208:BE0123456789",
+            "peppolId": "9925:BE0123456789",
             "street": "Avenue Louise 54",
             "city": "Brussels",
             "postalCode": "1050",

@@ -43,8 +43,16 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
  * The identifier also has a floor of six characters. Without it a date like
  * `2026:09-19` matches, and — because the SDK answers `valid: true` for a
  * scheme it does not know — it would pad the anti-vacuity counters below with
- * something that is not an identifier at all. Every real participant id is
- * longer than that: `BE0314595348` is twelve, `0685660237` is ten.
+ * something that is not an identifier at all.
+ *
+ * That floor is a trade, not a law. Short identifiers do exist: OpenPeppol
+ * v9.7 registers `9915:test` at four characters, and 0193 permits `.{4,50}`.
+ * None of them is reachable by this sweep anyway — the leading `\d` already
+ * excluded them before this floor was added, so nothing regressed — and none
+ * is published here. The sweep is deliberately narrower than the scheme rules:
+ * it exists to catch a wrong identifier among the ones we publish, not to
+ * enumerate every identifier Peppol allows. With a one- or two-letter country
+ * prefix the effective floor is seven or eight, not six.
  */
 const COLON_FORM = /\b(\d{4}):([A-Za-z]{0,2}\d[A-Za-z0-9._-]{5,})\b/g;
 

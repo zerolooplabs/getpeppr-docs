@@ -45,7 +45,7 @@ else:
 
 # -- Verify before sending ---------------------------------------------------
 
-buyer_peppol_id = "9925:BE0987654321"
+buyer_peppol_id = "9925:BE0314595348"
 scheme, identifier = buyer_peppol_id.split(":")
 
 response = requests.get(
@@ -102,14 +102,14 @@ invoice_data = {
     "number": "INV-2026-001",
     "buyerReference": "PO-2026-001",
     "to": {
-        "name": "Globex NV",
+        "name": "SPF Economie (test receiver)",
         "peppolId": buyer_peppol_id,
-        "street": "Rue de la Loi 200",
+        "street": "Rue du Progrès 50",
         "city": "Brussels",
-        "postalCode": "1000",
+        "postalCode": "1210",
         "country": "BE",
     },
-    "lines": [{"description": "Consulting", "quantity": 1, "unitPrice": 1000, "vatRate": 21}],
+    "lines": [{"description": "Consulting", "quantity": 1, "unitPrice": 1000, "vatRate": 0, "vatCategory": "O"}],
 }
 response = requests.post(
     f"{BASE_URL}/v1/invoices",

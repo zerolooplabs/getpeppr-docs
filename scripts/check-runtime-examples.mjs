@@ -200,9 +200,9 @@ async function checkTypeScriptDirectory(scenario, sourceKind = "example") {
       const peppol = new Peppol({ apiKey: "sk_sandbox_runtime_fixture" });
       const data = {
         number: "INV-FIXTURE-001", buyerReference: "PO-FIXTURE-001",
-        to: { name: "Fixture NV", peppolId: "9925:BE0987654321",
-          street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
-        lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
+        to: { name: "Fixture NV", peppolId: "9925:BE0314595348",
+          street: "Rue du Progrès 50", city: "Brussels", postalCode: "1210", country: "BE" },
+        lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 0, vatCategory: "O" }],
       };\n${blocks[0].code}`;
   } else source = readFileSync(join(root, "examples/typescript/directory-lookup.ts"), "utf8");
   const entry = join(work, `directory-${sourceKind}-${scenario}.mjs`);
@@ -221,7 +221,7 @@ async function checkTypeScriptDirectory(scenario, sourceKind = "example") {
       // TypeScript example reads the participant directly — GPR-1347.
       return Response.json(path.endsWith("/search") ? { data: [], meta: { total_count: 0 } } : {
         participant: {
-          name: "Fixture NV", peppolId: "9925:BE0987654321", country: "BE", capabilities: ["invoice"],
+          name: "Fixture NV", peppolId: "9925:BE0314595348", country: "BE", capabilities: ["invoice"],
         },
       });
     }

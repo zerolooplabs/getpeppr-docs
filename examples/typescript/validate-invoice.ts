@@ -6,15 +6,15 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 const result = peppol.validate({
   number: "INV-2026-042",
   to: {
-    name: "Globex NV",
-    peppolId: "9925:BE0987654321",
-    street: "Rue de la Loi 200",
+    name: "SPF Economie (test receiver)",
+    peppolId: "9925:BE0314595348",
+    street: "Rue du Progrès 50",
     city: "Brussels",
-    postalCode: "1000",
+    postalCode: "1210",
     country: "BE",
   },
   lines: [
-    { description: "Consulting Q1", quantity: 40, unitPrice: 125, vatRate: 21 },
+    { description: "Consulting Q1", quantity: 40, unitPrice: 125, vatRate: 0, vatCategory: "O" },
   ],
 });
 
@@ -38,15 +38,15 @@ for (const warning of result.warnings) {
 const serverResult = await peppol.invoices.validateServer({
   number: "INV-2026-043",
   to: {
-    name: "Globex NV",
-    peppolId: "9925:BE0987654321",
-    street: "Rue de la Loi 200",
+    name: "SPF Economie (test receiver)",
+    peppolId: "9925:BE0314595348",
+    street: "Rue du Progrès 50",
     city: "Brussels",
-    postalCode: "1000",
+    postalCode: "1210",
     country: "BE",
   },
   lines: [
-    { description: "Consulting Q2", quantity: 10, unitPrice: 125, vatRate: 21 },
+    { description: "Consulting Q2", quantity: 10, unitPrice: 125, vatRate: 0, vatCategory: "O" },
   ],
 });
 

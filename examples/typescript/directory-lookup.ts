@@ -38,7 +38,7 @@ if (participant) {
 // ── Verify before sending ─────────────────────────────────
 // Common pattern: check the recipient exists before creating an invoice
 
-const buyerPeppolId = "9925:BE0987654321";
+const buyerPeppolId = "9925:BE0314595348";
 
 let buyer;
 try {
@@ -82,12 +82,12 @@ const invoice = {
   to: {
     name: buyer.name,
     peppolId: buyer.peppolId,
-    street: "Rue de la Loi 200",
+    street: "Rue du Progrès 50",
     city: "Brussels",
-    postalCode: "1000",
+    postalCode: "1210",
     country: "BE" as const,
   },
-  lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
+  lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 0, vatCategory: "O" as const }],
 };
 
 // This sends one invoice when all checks pass. Replace the example recipient

@@ -23,7 +23,7 @@
     "check:entry-point": "node scripts/check-entry-point.mjs"
   },
   "devDependencies": {
-    "@getpeppr/sdk": "^5.5.0",
+    "@getpeppr/sdk": "^6.2.0",
     "@types/express": "^5.0.0",
     "@types/node": "^26.4.0",
     "express": "^5.0.0",

@@ -30,6 +30,9 @@
  *    anchors on the test receiver, and these samples did not name it. So the
  *    rule is turned around: every sample that sends with a sandbox key names no
  *    Peppol identifier but the test receiver and carries no tax-bearing line.
+ *    It sees what is literal in the sample — the `sk_sandbox_` key, the send
+ *    call, the identifier and the rate. A block that reuses a client built in
+ *    an earlier block, or reads the key from the environment, is not checked.
  *    A production-shaped sample says so with an `sk_live_` key, as the website
  *    does, and is free to show a realistic customer and 21 %.
  *
@@ -210,5 +213,5 @@ if (failures.length > 0) {
 console.log(
   `  ok   ${files.length} files: no dead link, no unreachable recipient; sign-up link before the first sample; ` +
     `${samplesWithLines} fixed test-receiver samples carry the outside-scope line; ` +
-    `${sandboxSends} sandbox-key sends address only the test receiver, ${liveSends} sends use a live key.`,
+    `${sandboxSends} sandbox-key samples on the send route name only the test receiver, ${liveSends} use a live key.`,
 );

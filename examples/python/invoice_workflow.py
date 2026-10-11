@@ -17,6 +17,20 @@ HEADERS = {
 
 
 # -- Step 1: Send an invoice -----------------------------------------------------
+# The sandbox delivers only to test recipients, and your sandbox sender's tax
+# profile decides which VAT line a send can carry: GET /v1/identity returns that
+# line ready to use.
+
+response = requests.get(
+    f"{BASE_URL}/v1/identity",
+    headers={"Authorization": f"Bearer {API_KEY}"},
+    timeout=30,
+)
+response.raise_for_status()
+first_send = response.json().get("sandboxFirstSend") or {}
+if first_send.get("status") != "ready":
+    raise SystemExit(first_send.get("message", "Sandbox profile unavailable"))
+vat_line = first_send["line"]
 
 response = requests.post(
     f"{BASE_URL}/v1/invoices",
@@ -24,11 +38,11 @@ response = requests.post(
     json={
         "number": "INV-2026-100",
         "to": {
-            "name": "Wayne Enterprises NV",
-            "peppolId": "9925:BE0123456789",
-            "street": "Avenue Louise 54",
+            "name": "SPF Economie (test receiver)",
+            "peppolId": "9925:BE0314595348",
+            "street": "Rue du Progrès 50",
             "city": "Brussels",
-            "postalCode": "1050",
+            "postalCode": "1210",
             "country": "BE",
         },
         "buyerReference": "PO-2026-007",
@@ -37,13 +51,13 @@ response = requests.post(
                 "description": "Arc Reactor Maintenance Q1",
                 "quantity": 1,
                 "unitPrice": 50000,
-                "vatRate": 21,
+                **vat_line,
             },
             {
                 "description": "Vibranium Shield Polish",
                 "quantity": 3,
                 "unitPrice": 250,
-                "vatRate": 21,
+                **vat_line,
             },
         ],
         "paymentTerms": "Net 30 days",

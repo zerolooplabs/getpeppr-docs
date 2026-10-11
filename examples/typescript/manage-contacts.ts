@@ -11,14 +11,14 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_abc123..." });
 // ── Create a contact ────────────────────────────────────────
 
 const contact = await peppol.contacts.create({
-  name: "Wayne Enterprises NV",
-  peppolId: "9925:BE0123456789",
-  vatNumber: "BE0123456789",
+  name: "SPF Economie (test receiver)",
+  peppolId: "9925:BE0314595348",
+  vatNumber: "BE0314595348",
   country: "BE",
-  city: "Gotham",
-  postalCode: "1000",
-  street: "Wayne Tower, 1 Park Row",
-  email: "accounts@wayne-enterprises.be",
+  city: "Brussels",
+  postalCode: "1210",
+  street: "Rue du Progrès 50",
+  email: "billing@example.com",
   isClient: true,
   isProvider: false,
 });
@@ -48,8 +48,8 @@ console.log(`Fetched: ${fetched.name}, email: ${fetched.email}`);
 // ── Update a contact ────────────────────────────────────────
 
 const updated = await peppol.contacts.update(contact.id, {
-  email: "invoicing@wayne-enterprises.be",
-  street: "Wayne Tower, 2 Park Row",
+  email: "invoicing@example.com",
+  street: "Rue du Progrès 50, Floor 2",
 });
 
 console.log(`Updated email: ${updated.email}`);

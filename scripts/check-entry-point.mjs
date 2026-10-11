@@ -23,6 +23,19 @@
  *    outside-scope line (`vatRate: 0`, `vatCategory: "O"`), unless it takes the
  *    line from `GET /identity` (`...identity.sandboxFirstSend.line`).
  *
+ * 4. A sandbox key sent somewhere the sandbox does not deliver (GPR-1416). The
+ *    main send examples paired `sk_sandbox_` with a Belgian VAT number that IS
+ *    on the network — a real participant whose owner we do not know (Peppol
+ *    Directory, 2026-10-11) — and with 21 % lines. Rule 3 never saw them: it
+ *    anchors on the test receiver, and these samples did not name it. So the
+ *    rule is turned around: every sample that sends with a sandbox key names no
+ *    Peppol identifier but the test receiver and carries no tax-bearing line.
+ *    It sees what is literal in the sample — the `sk_sandbox_` key, the send
+ *    call, the identifier and the rate. A block that reuses a client built in
+ *    an earlier block, or reads the key from the environment, is not checked.
+ *    A production-shaped sample says so with an `sk_live_` key, as the website
+ *    does, and is free to show a realistic customer and 21 %.
+ *
  * Like `check-peppol-ids.mjs`, nothing in the repository is exempt — this file
  * included — which is why the forbidden values below are assembled from parts
  * instead of quoted: a literal here would trip the sweep it defines.
@@ -34,7 +47,7 @@
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { assertFound, findFiles, rel, safe } from "./lib/markdown.mjs";
+import { assertFound, fencedBlocks, findFiles, rel, safe } from "./lib/markdown.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -42,6 +55,10 @@ const FORBIDDEN = [
   { value: ["peppol-invoice-", "nextjs-starter"].join(""), why: "archived starter repository" },
   { value: ["docs", "getpeppr", "dev"].join("."), why: "retired docs subdomain; the docs live at getpeppr.dev/docs" },
   { value: ["BE09876", "54321"].join(""), why: "not on the Peppol network; use the test receiver 9925:BE0314595348" },
+  {
+    value: ["BE01234", "56789"].join(""),
+    why: "a real Peppol participant, owner unknown; sandbox samples use 9925:BE0314595348, live samples a realistic customer",
+  },
 ];
 
 const SIGN_UP = "https://console.getpeppr.dev/sign-up?source=github-docs";
@@ -121,9 +138,63 @@ for (const file of files) {
   });
 }
 
+// 4 — a sample that sends with a sandbox key sends only where the sandbox delivers.
+/**
+ * A sample is a whole example file, or one fenced block of a Markdown file: a
+ * block is what a reader copies, and a README mixes sandbox and live blocks.
+ * "Sends" is read loosely — a GET on the same route matches too — because the
+ * rule only constrains identifiers and tax lines, which a GET does not carry.
+ */
+const SANDBOX_KEY = /sk_sandbox_/;
+const LIVE_KEY = /sk_live_/;
+const SENDS = /\binvoices\.send\(|\/v1\/invoices(?:["'\s\\]|$)/m;
+const PEPPOL_ID = /\b\d{4}:[A-Za-z]{0,2}\d[A-Za-z0-9._-]{5,}\b/g;
+const TEST_RECEIVER_ID = "9925:BE0314595348";
+/**
+ * The French example sends to a French buyer, which no Belgian test receiver
+ * can stand in for, and a French sandbox scenario needs a French sender. Which
+ * recipient it should name is a France decision, not this check's; it is listed
+ * here so that it stays visible instead of silently passing.
+ */
+const SANDBOX_SEND_EXEMPT = new Set(["examples/typescript/send-invoice-france.ts", "examples/python/send_invoice_france.py"]);
+
+const samples = [];
+for (const file of files) {
+  const where = rel(root, file);
+  if (where.startsWith("examples/") && /\.(ts|py)$/.test(where)) {
+    samples.push({ where, line: 1, code: readFileSync(file, "utf-8") });
+  } else if (where.endsWith(".md")) {
+    for (const lang of ["bash", "typescript"]) {
+      for (const b of fencedBlocks(file, lang)) samples.push({ where, line: b.line, code: b.code });
+    }
+  }
+}
+
+let sandboxSends = 0;
+let liveSends = 0;
+for (const { where, line, code } of samples) {
+  if (!SENDS.test(code)) continue;
+  if (LIVE_KEY.test(code)) liveSends++;
+  if (!SANDBOX_KEY.test(code) || SANDBOX_SEND_EXEMPT.has(where)) continue;
+  sandboxSends++;
+  const others = [...new Set(code.match(PEPPOL_ID) ?? [])].filter((id) => id !== TEST_RECEIVER_ID);
+  const taxed = [...code.matchAll(VAT_RATE)].map((m) => Number(m[1])).filter((r) => r !== 0);
+  const reasons = [];
+  if (others.length > 0) reasons.push(`names ${others.map(safe).join(", ")}, which the sandbox does not deliver to`);
+  if (taxed.length > 0) reasons.push(`carries vatRate ${taxed.join(", ")}`);
+  if (reasons.length > 0) {
+    failures.push(
+      `${where}:${line}: sends with a sandbox key but ${reasons.join(" and ")}. ` +
+        `Address ${TEST_RECEIVER_ID} with the outside-scope line, or make it a live sample (sk_live_).`,
+    );
+  }
+}
+
 // Anti-vacuity, reported with the other problems rather than thrown ahead of
 // them: a run that stops at "too few samples" hides the dead links it found.
 const floors = [
+  { count: sandboxSends, minimum: 12, what: "samples that send with a sandbox key" },
+  { count: liveSends, minimum: 6, what: "samples that send with a live key" },
   ...SURFACES.map((s) => ({
     count: receiverLines.filter((p) => s.match(p)).length, minimum: s.minimum, what: `test-receiver samples in ${s.label}`,
   })),
@@ -141,5 +212,6 @@ if (failures.length > 0) {
 
 console.log(
   `  ok   ${files.length} files: no dead link, no unreachable recipient; sign-up link before the first sample; ` +
-    `${samplesWithLines} fixed test-receiver samples carry the outside-scope line.`,
+    `${samplesWithLines} fixed test-receiver samples carry the outside-scope line; ` +
+    `${sandboxSends} sandbox-key samples on the send route name only the test receiver, ${liveSends} use a live key.`,
 );

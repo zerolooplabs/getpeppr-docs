@@ -8,14 +8,18 @@
 
 import { Peppol } from "@getpeppr/sdk";
 
-const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
+const peppol = new Peppol({ apiKey: "sk_live_..." });
+
+// Production example (live key, 21 % Belgian VAT): replace the buyer with your
+// own customer before running it. The sandbox delivers only to the test
+// receiver 9925:BE0314595348 — invoice-workflow.ts is the version that runs there.
 
 const result = await peppol.invoices.send({
   number: "INV-2026-099",
 
   to: {
-    name: "Wayne Enterprises NV",
-    peppolId: "9925:BE0123456789",
+    name: "ACMEDIA",
+    peppolId: "0208:0685660237",
     street: "Avenue Louise 54",
     city: "Brussels",
     postalCode: "1050",

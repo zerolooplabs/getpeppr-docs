@@ -196,6 +196,26 @@ function startGateway(scenario) {
     };
     const json = (status, obj) => send(status, { "Content-Type": "application/json" }, JSON.stringify(obj));
 
+    // The workflow examples read their VAT line from GET /identity before they
+    // send (GPR-1416). `environment` and `sandboxFirstSend` are the shape the
+    // sandbox answered on 2026-10-11 for a Belgian sender without a tax
+    // identifier; the legal entity and the empty identifier list are invented.
+    if (req.method === "GET" && path === "/v1/identity") {
+      return json(200, {
+        environment: "sandbox",
+        legalEntity: {
+          companyName: "Replay Test BV", country: "BE",
+          address: { line1: "Rue du Replay 1", city: "Brussels", zip: "1000" },
+          createdAt: "2026-10-11T00:00:00.000Z",
+        },
+        identifiers: [],
+        sandboxFirstSend: {
+          status: "ready", taxMode: "outside_scope",
+          line: { vatRate: 0, vatCategory: "O", taxExemptReason: "Integration test" },
+        },
+      });
+    }
+
     // The document lifecycle the workflow examples walk through before they
     // ever reach an export. `rawStatus` is required by the SDK since 4.0.0.
     if (req.method === "POST" && path === "/v1/invoices") {

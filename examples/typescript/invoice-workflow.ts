@@ -14,23 +14,31 @@ import { writeFileSync } from "fs";
 const peppol = new Peppol({ apiKey: "sk_sandbox_abc123..." });
 
 // -- Step 1: Send an invoice ----------------------------------------------------
+// The sandbox delivers only to test recipients, and your sandbox sender's tax
+// profile decides which VAT line a send can carry: GET /identity returns that
+// line ready to use.
+
+const identity = await peppol.identity.get();
+if (identity.sandboxFirstSend?.status !== "ready") {
+  throw new Error(identity.sandboxFirstSend?.message ?? "Sandbox profile unavailable");
+}
 
 const result = await peppol.invoices.send({
   number: "INV-2026-100",
 
   to: {
-    name: "Wayne Enterprises NV",
-    peppolId: "9925:BE0123456789",
-    street: "Avenue Louise 54",
+    name: "SPF Economie (test receiver)",
+    peppolId: "9925:BE0314595348",
+    street: "Rue du Progrès 50",
     city: "Brussels",
-    postalCode: "1050",
+    postalCode: "1210",
     country: "BE",
   },
   buyerReference: "PO-2026-007",
 
   lines: [
-    { description: "Arc Reactor Maintenance Q1", quantity: 1, unitPrice: 50_000, vatRate: 21 },
-    { description: "Vibranium Shield Polish", quantity: 3, unitPrice: 250, vatRate: 21 },
+    { description: "Arc Reactor Maintenance Q1", quantity: 1, unitPrice: 50_000, ...identity.sandboxFirstSend.line },
+    { description: "Vibranium Shield Polish", quantity: 3, unitPrice: 250, ...identity.sandboxFirstSend.line },
   ],
 
   paymentTerms: "Net 30 days",

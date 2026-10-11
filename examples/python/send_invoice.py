@@ -3,7 +3,11 @@
 import requests
 
 BASE_URL = "https://api.getpeppr.dev"
-API_KEY = "sk_sandbox_abc123..."
+API_KEY = "sk_live_xyz789..."
+
+# Production example (live key, 21 % Belgian VAT): replace the buyer with your
+# own customer before running it. The sandbox delivers only to the test
+# receiver 9925:BE0314595348 — invoice_workflow.py is the version that runs there.
 
 response = requests.post(
     f"{BASE_URL}/v1/invoices",
@@ -14,8 +18,8 @@ response = requests.post(
     json={
         "number": "INV-2026-042",
         "to": {
-            "name": "Wayne Enterprises NV",
-            "peppolId": "9925:BE0123456789",
+            "name": "ACMEDIA",
+            "peppolId": "0208:0685660237",
             "street": "Avenue Louise 54",
             "city": "Brussels",
             "postalCode": "1050",

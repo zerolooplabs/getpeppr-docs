@@ -58,7 +58,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"9925:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"SPF Economie (test receiver)\",\n    \"peppolId\": \"9925:BE0314595348\",\n    \"country\": \"BE\",\n    \"street\": \"Rue du Progrès 50\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1210\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 0, \"vatCategory\": \"O\"\n    }\n  ]\n}"
             }
           }
         },
@@ -84,7 +84,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"number\": \"CN-2026-001\",\n  \"isCreditNote\": true,\n  \"invoiceReference\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"9925:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting — refund\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+              "raw": "{\n  \"number\": \"CN-2026-001\",\n  \"isCreditNote\": true,\n  \"invoiceReference\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"SPF Economie (test receiver)\",\n    \"peppolId\": \"9925:BE0314595348\",\n    \"country\": \"BE\",\n    \"street\": \"Rue du Progrès 50\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1210\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting — refund\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 0, \"vatCategory\": \"O\"\n    }\n  ]\n}"
             }
           }
         },
@@ -233,7 +233,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Globex NV\",\n  \"peppolId\": \"9925:BE0987654321\",\n  \"country\": \"BE\",\n  \"email\": \"billing@globex.be\"\n}"
+              "raw": "{\n  \"name\": \"SPF Economie (test receiver)\",\n  \"peppolId\": \"9925:BE0314595348\",\n  \"country\": \"BE\",\n  \"email\": \"billing@example.com\"\n}"
             }
           }
         },
@@ -266,7 +266,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"invoicing@globex.be\",\n  \"street\": \"Rue du Commerce 42\"\n}"
+              "raw": "{\n  \"email\": \"invoicing@example.com\",\n  \"street\": \"Rue du Commerce 42\"\n}"
             }
           }
         },
@@ -594,7 +594,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"9925:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"SPF Economie (test receiver)\",\n    \"peppolId\": \"9925:BE0314595348\",\n    \"country\": \"BE\",\n    \"street\": \"Rue du Progrès 50\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1210\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 0, \"vatCategory\": \"O\"\n    }\n  ]\n}"
             }
           }
         },
@@ -621,7 +621,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"Globex NV\",\n    \"peppolId\": \"9925:BE0987654321\",\n    \"country\": \"BE\",\n    \"street\": \"Rue de la Loi 200\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1000\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 21\n    }\n  ]\n}"
+              "raw": "{\n  \"number\": \"INV-2026-001\",\n  \"to\": {\n    \"name\": \"SPF Economie (test receiver)\",\n    \"peppolId\": \"9925:BE0314595348\",\n    \"country\": \"BE\",\n    \"street\": \"Rue du Progrès 50\",\n    \"city\": \"Brussels\",\n    \"postalCode\": \"1210\"\n  },\n  \"lines\": [\n    {\n      \"description\": \"Consulting\",\n      \"quantity\": 1,\n      \"unitPrice\": 1000,\n      \"vatRate\": 0, \"vatCategory\": \"O\"\n    }\n  ]\n}"
             }
           }
         }

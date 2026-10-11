@@ -10,6 +10,8 @@ getpeppr is a developer-first API gateway for the [Peppol](https://peppol.org/) 
 
 ## Quick Start
 
+**[Get a free sandbox key →](https://console.getpeppr.dev/sign-up?source=github-docs)** Sandbox keys start with `sk_sandbox_`. The examples below send to `9925:BE0314595348` (SPF Economie), the Peppol test receiver: the sandbox delivers only to test recipients.
+
 ### 1. Install the SDK
 
 ```bash
@@ -23,10 +25,17 @@ import { Peppol } from "@getpeppr/sdk";
 
 const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 
+// Your sandbox sender's tax profile decides which VAT line a send can carry;
+// GET /identity returns that line ready to use.
+const identity = await peppol.identity.get();
+if (identity.sandboxFirstSend?.status !== "ready") {
+  throw new Error(identity.sandboxFirstSend?.message ?? "Sandbox profile unavailable");
+}
+
 const invoice = await peppol.invoices.send({
   number: "INV-2026-001",
-  to: { name: "Globex NV", peppolId: "9925:BE0987654321", street: "Rue de la Loi 200", city: "Brussels", postalCode: "1000", country: "BE" },
-  lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, vatRate: 21 }],
+  to: { name: "SPF Economie (test receiver)", peppolId: "9925:BE0314595348", street: "Rue du Progrès 50", city: "Brussels", postalCode: "1210", country: "BE" },
+  lines: [{ description: "Consulting", quantity: 1, unitPrice: 1000, ...identity.sandboxFirstSend.line }],
 });
 
 console.log(invoice.status); // "submitted"
@@ -41,18 +50,19 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
   -d '{
     "number": "INV-2026-001",
     "to": {
-      "name": "Globex NV",
-      "peppolId": "9925:BE0987654321",
-      "street": "Rue de la Loi 200",
+      "name": "SPF Economie (test receiver)",
+      "peppolId": "9925:BE0314595348",
+      "street": "Rue du Progrès 50",
       "city": "Brussels",
-      "postalCode": "1000",
+      "postalCode": "1210",
       "country": "BE"
     },
     "lines": [{
       "description": "Consulting",
       "quantity": 1,
       "unitPrice": 1000,
-      "vatRate": 21
+      "vatRate": 0,
+      "vatCategory": "O"
     }]
   }'
 ```
@@ -70,7 +80,7 @@ getpeppr login --key sk_sandbox_abc123... --sandbox
 getpeppr send invoice.json --watch
 
 # Or synthesize a quick test invoice from flags
-getpeppr send --to 9925:BE0987654321 --amount 1000 --desc "Consulting"
+getpeppr send --to 9925:BE0314595348 --amount 1000 --desc "Consulting"
 ```
 
 The CLI also handles offline validation (`getpeppr validate`), scaffolding (`getpeppr init`), UBL conversion (`getpeppr convert`), and Peppol Directory lookups (`getpeppr lookup`).

@@ -10,7 +10,7 @@
     "url": "git+https://github.com/zerolooplabs/getpeppr-docs.git"
   },
   "scripts": {
-    "check": "npm run check:examples && npm run check:peppol-ids && npm run check:snippets && npm run check:python && npm run check:shell && npm run check:postman && npm run check:routes && npm run check:export && npm run check:runtime",
+    "check": "npm run check:examples && npm run check:peppol-ids && npm run check:snippets && npm run check:python && npm run check:shell && npm run check:postman && npm run check:routes && npm run check:export && npm run check:runtime && npm run check:entry-point",
     "check:examples": "node scripts/check-examples.mjs",
     "check:peppol-ids": "node scripts/check-peppol-ids.mjs",
     "check:snippets": "node scripts/check-readme-snippets.mjs",
@@ -19,7 +19,8 @@
     "check:postman": "node scripts/check-postman.mjs",
     "check:routes": "node scripts/check-routes.mjs",
     "check:export": "node scripts/check-export-behaviour.mjs",
-    "check:runtime": "node scripts/check-runtime-examples.mjs"
+    "check:runtime": "node scripts/check-runtime-examples.mjs",
+    "check:entry-point": "node scripts/check-entry-point.mjs"
   },
   "devDependencies": {
     "@getpeppr/sdk": "^5.5.0",

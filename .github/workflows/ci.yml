@@ -129,3 +129,10 @@ jobs:
       - name: Webhook and client examples handle runtime responses
         if: always()
         run: npm run check:runtime
+
+      # The GitHub entry point (GPR-1415): no link to the archived starter or the
+      # retired docs subdomain, the sign-up link ahead of the first sample, and a
+      # VAT line the sandbox accepts on every fixed sample to the test receiver.
+      - name: GitHub entry point leads to a working sandbox send
+        if: always()
+        run: npm run check:entry-point

@@ -13,18 +13,19 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
   -d '{
     "number": "INV-2026-001",
     "to": {
-      "name": "Globex NV",
-      "peppolId": "9925:BE0987654321",
-      "street": "Rue de la Loi 200",
+      "name": "SPF Economie (test receiver)",
+      "peppolId": "9925:BE0314595348",
+      "street": "Rue du Progrès 50",
       "city": "Brussels",
-      "postalCode": "1000",
+      "postalCode": "1210",
       "country": "BE"
     },
     "lines": [{
       "description": "Consulting",
       "quantity": 1,
       "unitPrice": 1000,
-      "vatRate": 21
+      "vatRate": 0,
+      "vatCategory": "O"
     }]
   }'
 ```
@@ -74,18 +75,19 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
     "isCreditNote": true,
     "invoiceReference": "INV-2026-001",
     "to": {
-      "name": "Globex NV",
-      "peppolId": "9925:BE0987654321",
-      "street": "Rue de la Loi 200",
+      "name": "SPF Economie (test receiver)",
+      "peppolId": "9925:BE0314595348",
+      "street": "Rue du Progrès 50",
       "city": "Brussels",
-      "postalCode": "1000",
+      "postalCode": "1210",
       "country": "BE"
     },
     "lines": [{
       "description": "Consulting — refund",
       "quantity": 1,
       "unitPrice": 1000,
-      "vatRate": 21
+      "vatRate": 0,
+      "vatCategory": "O"
     }]
   }'
 ```
@@ -99,22 +101,23 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
   -d '{
     "number": "INV-2026-050",
     "to": {
-      "name": "Globex NV",
-      "peppolId": "9925:BE0987654321",
-      "street": "Rue de la Loi 200",
+      "name": "SPF Economie (test receiver)",
+      "peppolId": "9925:BE0314595348",
+      "street": "Rue du Progrès 50",
       "city": "Brussels",
-      "postalCode": "1000",
+      "postalCode": "1210",
       "country": "BE"
     },
     "lines": [{
       "description": "Consulting",
       "quantity": 10,
       "unitPrice": 500,
-      "vatRate": 21,
+      "vatRate": 0,
+      "vatCategory": "O",
       "allowances": [{ "reason": "Volume discount", "amount": 200 }]
     }],
-    "allowances": [{ "reason": "Annual contract discount", "amount": 100, "vatRate": 21 }],
-    "charges": [{ "reason": "Handling fee", "amount": 50, "vatRate": 21 }]
+    "allowances": [{ "reason": "Annual contract discount", "amount": 100, "vatRate": 0, "vatCategory": "O" }],
+    "charges": [{ "reason": "Handling fee", "amount": 50, "vatRate": 0, "vatCategory": "O" }]
   }'
 ```
 
@@ -157,18 +160,19 @@ curl -X POST https://api.getpeppr.dev/v1/validate \
   -d '{
     "number": "INV-2026-001",
     "to": {
-      "name": "Globex NV",
-      "peppolId": "9925:BE0987654321",
-      "street": "Rue de la Loi 200",
+      "name": "SPF Economie (test receiver)",
+      "peppolId": "9925:BE0314595348",
+      "street": "Rue du Progrès 50",
       "city": "Brussels",
-      "postalCode": "1000",
+      "postalCode": "1210",
       "country": "BE"
     },
     "lines": [{
       "description": "Consulting",
       "quantity": 1,
       "unitPrice": 1000,
-      "vatRate": 21
+      "vatRate": 0,
+      "vatCategory": "O"
     }]
   }'
 ```
@@ -186,18 +190,19 @@ curl -X POST https://api.getpeppr.dev/v1/validate/server \
   -d '{
     "number": "INV-2026-001",
     "to": {
-      "name": "Globex NV",
-      "peppolId": "9925:BE0987654321",
-      "street": "Rue de la Loi 200",
+      "name": "SPF Economie (test receiver)",
+      "peppolId": "9925:BE0314595348",
+      "street": "Rue du Progrès 50",
       "city": "Brussels",
-      "postalCode": "1000",
+      "postalCode": "1210",
       "country": "BE"
     },
     "lines": [{
       "description": "Consulting",
       "quantity": 1,
       "unitPrice": 1000,
-      "vatRate": 21
+      "vatRate": 0,
+      "vatCategory": "O"
     }]
   }'
 ```
@@ -218,10 +223,10 @@ curl -X POST https://api.getpeppr.dev/v1/contacts \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Globex NV",
-    "peppolId": "9925:BE0987654321",
+    "name": "SPF Economie (test receiver)",
+    "peppolId": "9925:BE0314595348",
     "country": "BE",
-    "email": "billing@globex.be"
+    "email": "billing@example.com"
   }'
 ```
 
@@ -232,7 +237,7 @@ curl -X PUT https://api.getpeppr.dev/v1/contacts/ct_abc123 \
   -H "Authorization: Bearer sk_sandbox_abc123..." \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "invoicing@globex.be",
+    "email": "invoicing@example.com",
     "street": "Rue du Commerce 42"
   }'
 ```

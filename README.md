@@ -131,6 +131,8 @@ Import the collection into Postman for interactive API exploration.
 | Python | [`examples/python/`](examples/python/) | HTTP examples with `requests` |
 | cURL | [`examples/curl/`](examples/curl/) | Command-line examples |
 
+The key in each example tells you where it runs. An `sk_sandbox_` example sends only to the test receiver `9925:BE0314595348` and runs as written with your sandbox key — `invoice-workflow` is the full send → status → export path. The French example (`send-invoice-france`) is the exception: it addresses a French buyer and needs a French sender, see the [France guide](https://getpeppr.dev/docs/france/). An `sk_live_` example (`send-invoice`, `send-credit-note`, `allowances-charges`) shows a production invoice with a realistic customer and 21 % VAT: replace the buyer with your own customer before running it.
+
 ---
 
 ## API Overview
@@ -371,6 +373,7 @@ npm run check
 | Command | What it proves |
 | --- | --- |
 | `npm run check:examples` | `examples/typescript/` compiles with `strict` against `@getpeppr/sdk` |
+| `npm run check:peppol-ids` | every published Peppol identifier passes the validator shipped in `@getpeppr/sdk` |
 | `npm run check:snippets` | the TypeScript fragments in this README compile too |
 | `npm run check:python` | `examples/python/` is syntactically valid (`py_compile`) |
 | `npm run check:shell` | every `bash` block in the Markdown files parses (`bash -n`) |
@@ -378,6 +381,7 @@ npm run check
 | `npm run check:routes` | every mentioned `/v1/…` path exists in the published OpenAPI spec, and its method too wherever the mention states one |
 | `npm run check:export` | the export examples, **executed** against a local replay of the gateway, check the PDF marker and byte length, and never write an error body under a `.pdf` or `.xml` name |
 | `npm run check:runtime` | the Express webhook accepts a signed inbound payload with 512 KB of embedded XML, rejects invalid signatures and oversized bodies; Python validation and the Python/TypeScript strict-recipient examples (including this README’s snippet) handle replayed success and error responses |
+| `npm run check:entry-point` | this repository stays a working way in: a sandbox sign-up link before the first sample, no link to a retired repository or domain, no recipient off the test network, and every sample that sends with a sandbox key addresses only the test receiver with a VAT line the sandbox accepts |
 
 The discovery sweeps also assert a minimum count, so an empty set of examples
 fails rather than passing green. Runtime checks name the scenarios they execute.

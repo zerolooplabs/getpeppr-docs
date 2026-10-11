@@ -59,7 +59,7 @@ async function checkWebhook() {
     data: {
       receivedDocumentId: "doc_runtime_fixture", legalEntityId: "le_runtime_fixture",
       externalSubTenantId: null, documentType: "invoice", invoiceNumber: "INV-FIXTURE-001",
-      sender: { peppolId: "9925:BE0123456789", name: "Fixture NV" },
+      sender: { peppolId: "9925:BE0314595348", name: "SPF Economie (test receiver)" },
       receivedAt: new Date().toISOString(), providerDocumentId: "provider_runtime_fixture",
       document: {
         format: "ubl", encoding: "base64", content: Buffer.from(xml).toString("base64"),

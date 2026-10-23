@@ -1,0 +1,15 @@
+{
+  "name": "getpeppr",
+  "displayName": "getpeppr",
+  "version": "1.0.0",
+  "description": "Peppol e-invoicing for developers. Connects Cursor to getpeppr's hosted MCP server: plan your Peppol integration, search the getpeppr docs, check a test invoice against the Peppol rules, look up a Peppol receiver and send sandbox test invoices. Cursor asks you to sign in with a free getpeppr account when it connects. Sandbox only: it never sends a real invoice.",
+  "author": {
+    "name": "Zero Loop Labs Ltd (getpeppr)",
+    "url": "https://getpeppr.dev"
+  },
+  "homepage": "https://getpeppr.dev/docs/mcp/",
+  "repository": "https://github.com/zerolooplabs/getpeppr-docs",
+  "license": "MIT",
+  "keywords": ["peppol", "e-invoicing", "einvoicing", "ubl", "mcp", "sandbox"],
+  "logo": "https://getpeppr.dev/favicon.svg"
+}

@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "getpeppr": {
+      "url": "https://api.getpeppr.dev/mcp/auth"
+    }
+  }
+}

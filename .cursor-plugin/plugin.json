@@ -11,5 +11,5 @@
   "repository": "https://github.com/zerolooplabs/getpeppr-docs",
   "license": "MIT",
   "keywords": ["peppol", "e-invoicing", "einvoicing", "ubl", "mcp", "sandbox"],
-  "logo": "https://getpeppr.dev/favicon.svg"
+  "logo": "https://getpeppr.dev/apple-touch-icon.png"
 }

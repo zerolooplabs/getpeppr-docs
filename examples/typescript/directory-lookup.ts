@@ -1,8 +1,11 @@
 /**
  * Peppol Directory Lookup Example
  *
- * Check if a business is registered on the Peppol network
- * before sending them an invoice.
+ * Look up and search the businesses listed in the Peppol Directory. The
+ * Directory is a public LISTING refreshed on its own schedule: it can lag the
+ * network by a day, and these calls read the PRODUCTION Directory whatever your
+ * key's environment. To check that a send can be routed, use validateRecipient
+ * on the send itself (last section), which asks the SML.
  */
 
 import { Peppol, PeppolApiError } from "@getpeppr/sdk";
@@ -13,7 +16,7 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 // scheme 9925 = Belgian VAT number
 
 // lookup() THROWS a PeppolApiError with statusCode 404 when the participant is
-// not on the network — it never resolves to null.
+// not listed in the Directory — it never resolves to null.
 let participant;
 try {
   participant = await peppol.directory.lookup("9925:BE0314595348");
@@ -32,25 +35,25 @@ if (participant) {
   if (participant.contactInfo) console.log(`Contact: ${JSON.stringify(participant.contactInfo)}`);
   if (participant.additionalIds) console.log(`Additional IDs: ${JSON.stringify(participant.additionalIds)}`);
 } else {
-  console.log("Participant not found on Peppol network");
+  console.log("Participant not listed in the Peppol Directory");
 }
 
-// ── Verify before sending ─────────────────────────────────
-// Common pattern: check the recipient exists before creating an invoice
+// ── Look up the recipient before sending ──────────────────
+// Use the listing to fill in what you show, never as the go/no-go: a recipient
+// registered since yesterday may not be listed yet, and a sandbox legal entity
+// never is. The send below decides with validateRecipient, which asks the SML.
 
-const buyerPeppolId = "9925:BE0314595348";
+const buyerPeppolId = "9925:BE0314595348" as const;
 
-let buyer;
+let buyerName = "SPF Economie (test receiver)"; // your own record of the customer
 try {
-  buyer = await peppol.directory.lookup(buyerPeppolId);
+  const listed = await peppol.directory.lookup(buyerPeppolId);
+  buyerName = listed.name;
+  console.log(`Listed in the Peppol Directory: ${listed.name}`);
 } catch (err) {
-  if (err instanceof PeppolApiError && err.statusCode === 404) {
-    throw new Error(`Recipient ${buyerPeppolId} is not reachable on Peppol`);
-  }
-  throw err;
+  if (!(err instanceof PeppolApiError && err.statusCode === 404)) throw err;
+  console.log(`${buyerPeppolId} is not listed in the Peppol Directory; it may still be on the network`);
 }
-
-console.log(`Recipient found: ${buyer.name}; invoice validation still applies`);
 
 // ─── Search the Peppol Directory ─────────────────────────────
 
@@ -80,8 +83,8 @@ const invoice = {
   number: "INV-2026-001",
   buyerReference: "PO-2026-001",
   to: {
-    name: buyer.name,
-    peppolId: buyer.peppolId,
+    name: buyerName,
+    peppolId: buyerPeppolId,
     street: "Rue du Progrès 50",
     city: "Brussels",
     postalCode: "1210",
@@ -92,17 +95,23 @@ const invoice = {
 
 // This sends one invoice when all checks pass. Replace the example recipient
 // and invoice details; use an approved test recipient in sandbox.
-// Use validateRecipient: "warn" instead for a non-blocking Directory check,
-// or omit it for no Directory check. Choose one mode per invoice.
-// Strict mode rejects a recipient absent from the Peppol Directory.
+// validateRecipient asks the SML (the registry every access point routes by) of
+// your key's network — not the Peppol Directory searched above, which can lag
+// the network by a day. Strict mode sends nothing when the SML has no record.
+// Use validateRecipient: "warn" instead to submit anyway: result.warnings then
+// carries ruleId "recipient_not_on_network" (SDK 6.5.0 or later; earlier
+// versions could drop it), and the provider may still refuse an unroutable
+// recipient (422 provider.rejected). Omit it for no check. Choose one mode per
+// invoice.
 try {
   const strictResult = await peppol.invoices.send(invoice, {
     validateRecipient: "strict",
   });
 } catch (err) {
+  // The result code keeps its historical name; the check reads the SML.
   if (err instanceof PeppolApiError && err.statusCode === 422 &&
       err.resultCode === "invoices.recipient_not_in_directory") {
-    console.error("Recipient not found in Peppol Directory");
+    console.error("Recipient not found on the Peppol network (no SML record)");
   } else {
     throw err;
   }

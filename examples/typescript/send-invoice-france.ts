@@ -8,6 +8,16 @@ const peppol = new Peppol({ apiKey: "sk_sandbox_..." });
 // Route with the scheme the buyer actually registered:
 //   0009 = SIRET (14 digits)   0002 = SIREN (9 digits)   0225 = FR:CTC
 // French VAT rates: standard 20%, reduced 10% / 5.5% / 2.1%.
+//
+// ⚠️ This is an ORDINARY Peppol send to a French buyer: it carries no `france`
+// block, so it is NOT declared to the French regulated flow. The regime is never
+// inferred from the buyer's country. To issue a regulated French invoice, add
+//   france: { cadreDeFacturation: "S1" }  // the use case (AFNOR XP Z12-012)
+// once the issuing legal entity has its SIREN (0002) registered BEFORE its 0225
+// directory address — otherwise the send is refused with
+// 422 invoices.france_regime_not_eligible. A declared invoice's number must also
+// follow BR-FR-01 (at most 20 characters until 2026-12-01).
+// See https://getpeppr.dev/docs/france/#send.
 const result = await peppol.invoices.send({
   number: "INV-2026-042",
 

@@ -131,7 +131,7 @@ Import the collection into Postman for interactive API exploration.
 | Python | [`examples/python/`](examples/python/) | HTTP examples with `requests` |
 | cURL | [`examples/curl/`](examples/curl/) | Command-line examples |
 
-The key in each example tells you where it runs. An `sk_sandbox_` example sends only to the test receiver `9925:BE0314595348` — `invoice-workflow` runs as written with your sandbox key and is the full send → status → export path. The French example (`send-invoice-france`) is the exception: it addresses a French buyer and needs a French sender, see the [France guide](https://getpeppr.dev/docs/france/). An `sk_live_` example (`send-invoice`, `send-credit-note`, `allowances-charges`) shows a production invoice with a realistic customer and 21 % VAT: replace the buyer with your own customer before running it.
+The key in each example tells you where it runs. An `sk_sandbox_` example sends only to the test receiver `9925:BE0314595348` — `invoice-workflow` runs as written with your sandbox key and is the full send → status → export path. The French example (`send-invoice-france`) is the exception: it addresses a French buyer and needs a French sender, see the [France guide](https://getpeppr.dev/docs/france/). It is an ordinary Peppol send, **not declared to the French regulated flow**: a regulated French invoice adds a `france` block (`cadreDeFacturation`), which the issuing identity must be registered for — see [Declaring the regulated French flow](https://getpeppr.dev/docs/france/#send). An `sk_live_` example (`send-invoice`, `send-credit-note`, `allowances-charges`) shows a production invoice with a realistic customer and 21 % VAT: replace the buyer with your own customer before running it.
 
 ---
 
@@ -256,6 +256,7 @@ console.log(event.type); // e.g. "invoice.sent"
 | `legal_entity.verification_failed` | Platform sub-tenant registry verification failed |
 | `legal_entity.unsupported_scheme` | Platform sub-tenant identifier uses a scheme with no automatic validator |
 | `legal_entity.awaiting_authz` | Platform sub-tenant authorisation email is awaiting customer action |
+| `legal_entity.awaiting_release` | Production: platform sub-tenant authorised, but another Peppol access point still holds the address; getpeppr registers it automatically once released (`heldBy` names that access point's SMP host when known) |
 | `legal_entity.registration_failed` | Platform sub-tenant identity verified but network (SMP) registration failed |
 | `peppol_identifier.verified` | A Peppol identifier completed registry verification |
 | `peppol_identifier.verification_failed` | A Peppol identifier failed registry verification |
@@ -288,20 +289,29 @@ Use `data.receivedDocumentId` as `{id}`. The list accepts `limit`, `offset`, and
 
 ### Pre-send Recipient Validation
 
-Optionally check the recipient’s presence in the Peppol Directory when sending.
-Directory presence is not proof of network receive readiness.
+Optionally check, when sending, that the recipient is registered on the Peppol
+network. The gateway asks the SML — the registry every access point routes by —
+of your key's network: the Peppol test network for a sandbox key, the production
+network for a live key. It does not read the public Peppol Directory, which can
+lag the network by a day. Registered is not proof of receive readiness: a
+recipient that does not accept invoices still fails later, through the
+`invoice.undeliverable` webhook. An SML that cannot be read never blocks a send.
 
 ```typescript
 import { PeppolApiError } from "@getpeppr/sdk";
 
-// Choose one mode per invoice. Use "warn" instead for a non-blocking Directory
-// check, or omit the option for no Directory check. This sends when checks pass.
+// Choose one mode per invoice. Use "warn" instead to submit anyway: when the SML
+// has no record, `result.warnings` carries `ruleId: "recipient_not_on_network"`
+// (SDK 6.5.0 or later; earlier versions could drop it), and the provider may
+// still refuse an unroutable recipient (422 provider.rejected). Omit the option
+// for no check. This sends when checks pass.
 try {
   const strict = await peppol.invoices.send(data, { validateRecipient: "strict" });
 } catch (err) {
+  // The result code keeps its historical name; the check reads the SML.
   if (err instanceof PeppolApiError &&
       err.resultCode === "invoices.recipient_not_in_directory") {
-    console.error("Recipient not found in Peppol Directory");
+    console.error("Recipient not found on the Peppol network (no SML record)");
   } else {
     throw err; // Other validation, authentication and rate-limit failures.
   }

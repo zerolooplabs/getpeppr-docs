@@ -353,9 +353,14 @@ curl -X GET "https://api.getpeppr.dev/v1/directory/search?vatNumber=BE0685660237
 ### Pre-send recipient validation
 
 Choose one mode per invoice; both commands send when their checks pass.
-These options check the Peppol Directory, not public network receive readiness.
+The header asks the SML — the registry every access point routes by — of your
+key's network (the test network for a sandbox key), not the public Peppol
+Directory, which can lag the network by a day. Registered is not proof of
+receive readiness: a recipient that does not accept invoices still fails later,
+through the `invoice.undeliverable` webhook.
 
-Warn mode (non-blocking):
+Warn mode (non-blocking — when the SML has no record, the `201` carries a
+`warnings` entry with `ruleId: recipient_not_on_network`):
 
 ```bash
 curl -X POST https://api.getpeppr.dev/v1/invoices \
@@ -365,9 +370,9 @@ curl -X POST https://api.getpeppr.dev/v1/invoices \
   -d @invoice.json
 ```
 
-Strict mode rejects a recipient absent from the Directory with HTTP 422 and
-`Getpeppr-Result-Code: invoices.recipient_not_in_directory`. Other 422 responses
-are different validation failures:
+Strict mode sends nothing when the SML has no record for the recipient, and
+answers HTTP 422 with `Getpeppr-Result-Code: invoices.recipient_not_in_directory`
+(a historical name). Other 422 responses are different validation failures:
 
 ```bash
 curl -X POST https://api.getpeppr.dev/v1/invoices \

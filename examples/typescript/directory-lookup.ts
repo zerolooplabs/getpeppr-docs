@@ -92,17 +92,21 @@ const invoice = {
 
 // This sends one invoice when all checks pass. Replace the example recipient
 // and invoice details; use an approved test recipient in sandbox.
-// Use validateRecipient: "warn" instead for a non-blocking Directory check,
-// or omit it for no Directory check. Choose one mode per invoice.
-// Strict mode rejects a recipient absent from the Peppol Directory.
+// validateRecipient asks the SML (the registry every access point routes by) of
+// your key's network — not the Peppol Directory searched above, which can lag
+// the network by a day. Strict mode sends nothing when the SML has no record.
+// Use validateRecipient: "warn" instead to submit anyway: result.warnings then
+// carries ruleId "recipient_not_on_network" (SDK 6.5.0 or later; earlier
+// versions could drop it). Omit it for no check. Choose one mode per invoice.
 try {
   const strictResult = await peppol.invoices.send(invoice, {
     validateRecipient: "strict",
   });
 } catch (err) {
+  // The result code keeps its historical name; the check reads the SML.
   if (err instanceof PeppolApiError && err.statusCode === 422 &&
       err.resultCode === "invoices.recipient_not_in_directory") {
-    console.error("Recipient not found in Peppol Directory");
+    console.error("Recipient not found on the Peppol network (no SML record)");
   } else {
     throw err;
   }

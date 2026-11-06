@@ -97,7 +97,10 @@ print(f"VAT search found {vat_data['meta']['total_count']} results")
 
 # This sends an invoice when all checks pass. Replace the example recipient and
 # invoice details with your own; use an approved test recipient in sandbox.
-# Strict mode rejects a recipient absent from the Peppol Directory.
+# x-validate-recipient asks the SML (the registry every access point routes by)
+# of your key's network, not the Peppol Directory searched above, which can lag
+# the network by a day. Strict mode sends nothing when the SML has no record; the
+# result code keeps its historical name.
 invoice_data = {
     "number": "INV-2026-001",
     "buyerReference": "PO-2026-001",
@@ -121,7 +124,7 @@ if (
     response.status_code == 422
     and response.headers.get("Getpeppr-Result-Code") == "invoices.recipient_not_in_directory"
 ):
-    print("Recipient not found in Peppol Directory")
+    print("Recipient not found on the Peppol network (no SML record)")
 else:
     # Other validation failures, rate limits and authentication errors are not
     # evidence that a recipient is missing. Preserve those errors for the caller.

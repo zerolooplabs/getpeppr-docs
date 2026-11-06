@@ -1,4 +1,9 @@
-"""Peppol directory lookup — check if a business is on the Peppol network.
+"""Peppol directory lookup — find the businesses listed in the Peppol Directory.
+
+The Directory is a public LISTING refreshed on its own schedule: it can lag the
+network by a day, and these calls read the PRODUCTION Directory whatever your
+key's environment. To check that a send can be routed, send with the
+x-validate-recipient header (last section), which asks the SML.
 
 GET /v1/directory/{scheme}/{id} answers {"participant": {...}} — the participant
 is nested, not the top-level object. The TypeScript example reads the participant
@@ -38,12 +43,15 @@ if response.status_code == 200:
     if participant.get("additionalIds"):
         print(f"Additional IDs: {participant['additionalIds']}")
 elif response.status_code == 404:
-    print("Participant not found on Peppol network")
+    print("Participant not listed in the Peppol Directory")
 else:
     response.raise_for_status()
 
 
-# -- Verify before sending ---------------------------------------------------
+# -- Look up the recipient before sending ------------------------------------
+# Use the listing to fill in what you show, never as the go/no-go: a recipient
+# registered since yesterday may not be listed yet, and a sandbox legal entity
+# never is. The send below decides with x-validate-recipient, which asks the SML.
 
 buyer_peppol_id = "9925:BE0314595348"
 scheme, identifier = buyer_peppol_id.split(":")
@@ -56,9 +64,9 @@ response = requests.get(
 
 if response.status_code == 200:
     buyer = response.json()["participant"]
-    print(f"Recipient found: {buyer['name']}; invoice validation still applies")
+    print(f"Listed in the Peppol Directory: {buyer['name']}")
 elif response.status_code == 404:
-    print(f"Recipient {buyer_peppol_id} is not reachable on Peppol")
+    print(f"{buyer_peppol_id} is not listed in the Peppol Directory; it may still be on the network")
 else:
     response.raise_for_status()
 

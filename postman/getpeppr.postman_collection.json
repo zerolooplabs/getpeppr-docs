@@ -42,7 +42,7 @@
               {
                 "key": "x-validate-recipient",
                 "value": "warn",
-                "description": "Optional check that the recipient is registered on the Peppol network: the gateway asks the SML of your key's network, not the Peppol Directory, which can lag by a day. 'warn' submits anyway and adds a warnings entry with ruleId recipient_not_on_network; 'strict' sends nothing and answers HTTP 422 with Getpeppr-Result-Code: invoices.recipient_not_in_directory (a historical name). Other 422 responses have different causes. Omit for no check.",
+                "description": "Optional check that the recipient is registered on the Peppol network: the gateway asks the SML of your key's network, not the Peppol Directory, which can lag by a day. 'warn' submits anyway and adds a warnings entry with ruleId recipient_not_on_network (the provider may still refuse an unroutable recipient with 422 provider.rejected); 'strict' sends nothing and answers HTTP 422 with Getpeppr-Result-Code: invoices.recipient_not_in_directory (a historical name). Other 422 responses have different causes. Omit for no check.",
                 "disabled": true
               }
             ],

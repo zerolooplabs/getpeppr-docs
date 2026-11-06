@@ -360,7 +360,8 @@ receive readiness: a recipient that does not accept invoices still fails later,
 through the `invoice.undeliverable` webhook.
 
 Warn mode (non-blocking — when the SML has no record, the `201` carries a
-`warnings` entry with `ruleId: recipient_not_on_network`):
+`warnings` entry with `ruleId: recipient_not_on_network`; the provider may still
+refuse an unroutable recipient with `422 provider.rejected`):
 
 ```bash
 curl -X POST https://api.getpeppr.dev/v1/invoices \

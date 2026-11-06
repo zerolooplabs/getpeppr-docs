@@ -131,7 +131,7 @@ Import the collection into Postman for interactive API exploration.
 | Python | [`examples/python/`](examples/python/) | HTTP examples with `requests` |
 | cURL | [`examples/curl/`](examples/curl/) | Command-line examples |
 
-The key in each example tells you where it runs. An `sk_sandbox_` example sends only to the test receiver `9925:BE0314595348` — `invoice-workflow` runs as written with your sandbox key and is the full send → status → export path. The French example (`send-invoice-france`) is the exception: it addresses a French buyer and needs a French sender, see the [France guide](https://getpeppr.dev/docs/france/). An `sk_live_` example (`send-invoice`, `send-credit-note`, `allowances-charges`) shows a production invoice with a realistic customer and 21 % VAT: replace the buyer with your own customer before running it.
+The key in each example tells you where it runs. An `sk_sandbox_` example sends only to the test receiver `9925:BE0314595348` — `invoice-workflow` runs as written with your sandbox key and is the full send → status → export path. The French example (`send-invoice-france`) is the exception: it addresses a French buyer and needs a French sender, see the [France guide](https://getpeppr.dev/docs/france/). It is an ordinary Peppol send, **not declared to the French regulated flow**: a regulated French invoice adds a `france` block (`cadreDeFacturation`), which the issuing identity must be registered for — see [Declaring the regulated French flow](https://getpeppr.dev/docs/france/#send). An `sk_live_` example (`send-invoice`, `send-credit-note`, `allowances-charges`) shows a production invoice with a realistic customer and 21 % VAT: replace the buyer with your own customer before running it.
 
 ---
 
@@ -302,8 +302,9 @@ import { PeppolApiError } from "@getpeppr/sdk";
 
 // Choose one mode per invoice. Use "warn" instead to submit anyway: when the SML
 // has no record, `result.warnings` carries `ruleId: "recipient_not_on_network"`
-// (SDK 6.5.0 or later; earlier versions could drop it). Omit the option for no
-// check. This sends when checks pass.
+// (SDK 6.5.0 or later; earlier versions could drop it), and the provider may
+// still refuse an unroutable recipient (422 provider.rejected). Omit the option
+// for no check. This sends when checks pass.
 try {
   const strict = await peppol.invoices.send(data, { validateRecipient: "strict" });
 } catch (err) {

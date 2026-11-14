@@ -79,9 +79,9 @@ def handle_webhook() -> Response:
             print(f"Received an invoice ({event['data']['receivedDocumentId']}) from the Peppol network")
         case "inbound.creditnote.received":
             print(f"Received a credit note ({event['data']['receivedDocumentId']}) from the Peppol network")
-        # A document sent to you arrived but could not be delivered (reason: too_large or
-        # legal_entity_unresolved). An endpoint subscribed to the reception events receives
-        # it without subscribing to it. There is nothing to fetch: deduplicate on
+        # A document sent to you arrived but could not be delivered (reason: too_large,
+        # legal_entity_unresolved or send_only_entity). An endpoint subscribed to the reception
+        # events receives it without subscribing to it. There is nothing to fetch: deduplicate on
         # data.undeliverableDocumentId and quote data.providerDocumentId to support.
         case "inbound.document.undeliverable":
             print(f"A received document could not be delivered ({event['data']['reason']}, reference {event['data']['providerDocumentId']})")

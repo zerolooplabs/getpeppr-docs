@@ -83,9 +83,9 @@ app.post(
         console.log(`Received a credit note (${data.receivedDocumentId}) from the Peppol network`);
         break;
 
-      // A document sent to you arrived but could not be delivered (reason: too_large or
-      // legal_entity_unresolved). An endpoint subscribed to the reception events receives
-      // it without subscribing to it. There is nothing to fetch: deduplicate on
+      // A document sent to you arrived but could not be delivered (reason: too_large,
+      // legal_entity_unresolved or send_only_entity). An endpoint subscribed to the reception
+      // events receives it without subscribing to it. There is nothing to fetch: deduplicate on
       // data.undeliverableDocumentId and quote data.providerDocumentId to support.
       case "inbound.document.undeliverable":
         console.error(`A received document could not be delivered (${data.reason}, reference ${data.providerDocumentId})`);

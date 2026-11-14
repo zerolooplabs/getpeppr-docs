@@ -221,6 +221,69 @@ Convenience method: `directory.searchByVat(vatNumber)` — searches by VAT numbe
 |--------|----------|------------|-------------|
 | `GET` | `/v1/events` | `events.list()` | List usage events (paginated) |
 
+### Legal Entities (platforms)
+
+Platform accounts manage their customers with a **master key** (a standard key gets `403 authz.master_key_required`). See the [Legal Entities guide](https://getpeppr.dev/docs/platform/legal-entities/) for the full lifecycle.
+
+| Method | Endpoint | SDK Method | Description |
+|--------|----------|------------|-------------|
+| `POST` | `/v1/legal-entities` | `legalEntities.create()` | Create a customer, idempotent by `externalId` (`202` created, `200` already existed) |
+| `GET` | `/v1/legal-entities` | `legalEntities.list()` | List customers, newest first (paginated) |
+| `GET` | `/v1/legal-entities/:id` | `legalEntities.get()` | Read one customer and its status |
+
+#### Network role (send-only)
+
+`networkRole` says what getpeppr does on the Peppol network for the customer, fixed at creation:
+
+- `send_and_receive` (the default when omitted): getpeppr sends and receives for it, as for every customer created before.
+- `send_only`: for a Belgian company that already receives its invoices at another access point and keeps doing so. getpeppr only sends for it, and once it is authorised re-checks every 6 hours that the other access point still receives for it. Send-only is **enabled per account by getpeppr**, in the sandbox as in production.
+
+`customerReference` is your reference for your contract with that customer (1–64 characters, never invoice data), **required for a production `send_only` customer**, and fixed at creation too. Every response carries `networkRole`, `customerReference` and `receiving` (who receives the customer's invoices: `getpeppr`, or for a send-only customer `elsewhere`, `none` or `unknown`); a send-only customer also carries `authorisation`, and `suspension` while its `status` is `suspended`.
+
+```typescript
+// @getpeppr/sdk 6.7.0 or later types these fields; earlier versions drop them.
+const customer = await peppol.legalEntities.create({
+  externalId: "be-customer-7",
+  companyName: "Example BV",
+  country: "BE",
+  address: { line1: "Rue de la Loi 1", city: "Bruxelles", zip: "1000" },
+  identifiers: [{ scheme: "0208", value: "0000500044" }], // sandbox test range
+  networkRole: "send_only",
+  customerReference: "CTR-2026-0412", // required with a production key
+});
+
+const current = await peppol.legalEntities.get(customer.id);
+console.log(current.networkRole, current.receiving?.handledBy);
+if (current.status === "suspended") console.log(current.suspension?.reasons);
+```
+
+The SDK copies these fields only when the response carries them well-formed: read an absent `networkRole` as unknown, never as `send_and_receive`. Today a send-only customer does not reach `active` and cannot send yet: the authorisation it needs is not open, in the sandbox or in production.
+
+Send-only refusals at creation. Nothing is created when one applies. An account that is not enabled gets the `403` first; on an enabled account the checks from the country down run in the order of the table, the first refusal winning.
+
+| Status | Result code | When |
+|--------|-------------|------|
+| `403` | `legal_entities.send_only_not_enabled` | The account is not enabled for send-only (contact support, or use `send_and_receive`) |
+| `422` | `legal_entities.send_only_not_available_in_country` | The country does not offer send-only (Belgium only) |
+| `422` | `legal_entities.send_only_proof_identifier_missing` | The identifiers do not start with the one the company already receives on (in Belgium, its enterprise number, scheme `0208`) |
+| `400` | `legal_entities.identifier_set_invalid` | Anything other than that identifier, optionally followed by its VAT number (scheme `9925`, sandbox only for now) |
+| `422` | `legal_entities.send_only_customer_reference_missing` | Production: `customerReference` is missing |
+| `422` | `legal_entities.send_only_sandbox_identity_required` | Sandbox: an identifier outside the sandbox test range (`0000` plus six digits with a valid modulo-97 check, never a real company's, that no access point already serves on the Peppol test network) |
+| `422` | `legal_entities.receiving_registration_not_found` | Production: no access point publishes a receiving service for that identifier |
+| `503` | `legal_entities.receiving_registration_unverifiable` | The Peppol network could not be read, in either environment; retry the same request |
+
+Also at creation: `400 legal_entities.network_role_invalid` when `networkRole` is neither value, and, when the `externalId` already exists, `409 legal_entities.network_role_change_not_available` (another role) or `409 legal_entities.customer_reference_immutable` (another `customerReference`).
+
+After creation:
+
+| Status | Result code | When |
+|--------|-------------|------|
+| `422` | `attestation.send_only_not_available` | Email attestation is requested for a send-only customer |
+| `422` | `invoices.sender_sending_suspended` | A send on behalf of a `suspended` send-only customer; the reasons are in `suspension.reasons` |
+| `429` | `invoices.send_only_daily_limit` | In its first 30 days after activation, a send-only customer's 51st document in one UTC day; `Retry-After` points at the next 00:00 UTC |
+
+A document that reaches getpeppr for a send-only customer is not delivered and not billed: you receive `inbound.document.undeliverable` with reason `send_only_entity`. Every code is in the [result catalogue](https://getpeppr.dev/docs/api-results/).
+
 ### Webhooks
 
 Verify incoming webhook signatures using HMAC-SHA256:
@@ -258,10 +321,14 @@ console.log(event.type); // e.g. "invoice.sent"
 | `legal_entity.awaiting_authz` | Platform sub-tenant authorisation email is awaiting customer action |
 | `legal_entity.awaiting_release` | Production: platform sub-tenant authorised, but another Peppol access point still holds the address; getpeppr registers it automatically once released (`heldBy` names that access point's SMP host when known) |
 | `legal_entity.registration_failed` | Platform sub-tenant identity verified but network (SMP) registration failed |
+| `legal_entity.send_ready` | A send-only sub-tenant (`networkRole: "send_only"`) is ready to send: its authority is proven and another access point receives its invoices. `legal_entity.registered` is never sent for this role |
+| `legal_entity.suspended` | A send-only sub-tenant can no longer send; `suspension.reasons` says why (receiving registration not found, lost or unverifiable, or blocked by getpeppr) |
+| `legal_entity.resumed` | A suspended send-only sub-tenant can send again. For these three events only the latest transition is delivered: order them by `occurredAt` per `legalEntityId`, and treat `status` on the legal entity as authoritative |
 | `peppol_identifier.verified` | A Peppol identifier completed registry verification |
 | `peppol_identifier.verification_failed` | A Peppol identifier failed registry verification |
 | `inbound.invoice.received` | An invoice addressed to your Legal Entity was received from the Peppol network |
 | `inbound.creditnote.received` | A credit note addressed to your Legal Entity was received from the Peppol network |
+| `inbound.document.undeliverable` | A document addressed to your account was received from the Peppol network but could not be delivered to you (for example `reason: "send_only_entity"`). Also sent to endpoints subscribed to the reception event of that document's type |
 | `test.ping` | Test event sent during endpoint setup |
 | `*` | Wildcard — subscribes to every event type except `invoice.status_changed`, which is opt-in |
 
@@ -269,7 +336,7 @@ See the full [Webhooks guide](https://getpeppr.dev/docs/webhooks/) for payload s
 
 #### Inbound Reception
 
-When a supplier on the Peppol network sends an invoice or credit note **to** one of your Legal Entities, getpeppr stores the document and dispatches an `inbound.invoice.received` or `inbound.creditnote.received` event. Every Legal Entity receives from the day it is registered, in sandbox and in production, with nothing to enable.
+When a supplier on the Peppol network sends an invoice or credit note **to** one of your Legal Entities, getpeppr stores the document and dispatches an `inbound.invoice.received` or `inbound.creditnote.received` event. Every Legal Entity created with the default `networkRole`, `send_and_receive`, receives from the day it is registered, in sandbox and in production, with nothing to enable. A [`send_only`](#network-role-send-only) Legal Entity never receives at getpeppr — its company keeps receiving at its other access point — so no `inbound.*.received` event is sent for it.
 
 > **Not to be confused with `invoice.received`** — that outbound event means a document _you sent_ was acknowledged by the recipient's access point. The `inbound.*` events mean a document was sent _to you_ by a third party.
 

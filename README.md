@@ -236,7 +236,7 @@ Platform accounts manage their customers with a **master key** (a standard key g
 `networkRole` says what getpeppr does on the Peppol network for the customer, fixed at creation:
 
 - `send_and_receive` (the default when omitted): getpeppr sends and receives for it, as for every customer created before.
-- `send_only`: for a Belgian company that already receives its invoices at another access point and keeps doing so. getpeppr only sends for it, and once it is authorised re-checks every 6 hours that the other access point still receives for it. Send-only is **enabled per account by getpeppr**, in the sandbox as in production.
+- `send_only`: for a Belgian company that already receives its invoices at another access point and keeps doing so. getpeppr only sends for it, and once it is authorised re-checks every 6 hours that the other access point still receives for it. In the sandbox, send-only is open to every platform account. In production it is **enabled per account by getpeppr**.
 
 `customerReference` is your reference for your contract with that customer (1–64 characters, never invoice data), **required for a production `send_only` customer**, and fixed at creation too. Every response carries `networkRole`, `customerReference` and `receiving` (who receives the customer's invoices: `getpeppr`, or for a send-only customer `elsewhere`, `none` or `unknown`); a send-only customer also carries `authorisation`, and `suspension` while its `status` is `suspended`.
 
@@ -257,13 +257,13 @@ console.log(current.networkRole, current.receiving?.handledBy);
 if (current.status === "suspended") console.log(current.suspension?.reasons);
 ```
 
-The SDK copies these fields only when the response carries them well-formed: read an absent `networkRole` as unknown, never as `send_and_receive`. Today a send-only customer does not reach `active` and cannot send yet: the authorisation it needs is not open, in the sandbox or in production.
+The SDK copies these fields only when the response carries them well-formed: read an absent `networkRole` as unknown, never as `send_and_receive`. In production a send-only customer does not reach `active` and cannot send yet: the authorisation it needs is not open. In the sandbox its authorisation is simulated (`authorisation.method` is `sandbox_simulated`) and getpeppr checks its receiving on the Peppol test network within minutes: a test-range number that no access point serves ends `suspended` (`receiving_registration_not_found`), while getpeppr's sandbox proof identity `0208:0000146389` (optionally followed by `9925:BE0000146389`) counts as received elsewhere, becomes `active` and can send to a test buyer. See [Network role](https://getpeppr.dev/docs/platform/legal-entities/#network-role).
 
-Send-only refusals at creation. Nothing is created when one applies. An account that is not enabled gets the `403` first; on an enabled account the checks from the country down run in the order of the table, the first refusal winning.
+Send-only refusals at creation. Nothing is created when one applies. In production, an account that is not enabled gets the `403` first. Otherwise the checks from the country down run in the order of the table, before the rest of the body, the first refusal winning.
 
 | Status | Result code | When |
 |--------|-------------|------|
-| `403` | `legal_entities.send_only_not_enabled` | The account is not enabled for send-only (contact support, or use `send_and_receive`) |
+| `403` | `legal_entities.send_only_not_enabled` | Production: the account is not enabled for send-only (contact support, or use `send_and_receive`). Never in the sandbox |
 | `422` | `legal_entities.send_only_not_available_in_country` | The country does not offer send-only (Belgium only) |
 | `422` | `legal_entities.send_only_proof_identifier_missing` | The identifiers do not start with the one the company already receives on (in Belgium, its enterprise number, scheme `0208`) |
 | `400` | `legal_entities.identifier_set_invalid` | Anything other than that identifier, optionally followed by its VAT number (scheme `9925`, sandbox only for now) |
